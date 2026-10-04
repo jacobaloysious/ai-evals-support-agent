@@ -88,3 +88,14 @@ export function createOrderTools({ store, getSession }) {
     },
   };
 }
+
+/** Keep internal denial codes separate from safe customer-facing wording. */
+export function orderLookupMessage(result) {
+  if (result.code === "ORDER_NOT_ACCESSIBLE") {
+    return "I can't find that order under the account you're signed into. Please check the order number or sign into the account used for the purchase.";
+  }
+  if (result.code === "AUTH_REQUIRED") {
+    return "Please sign in to the account used for the purchase so I can look up your order.";
+  }
+  return null;
+}
