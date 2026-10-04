@@ -6,10 +6,21 @@ A practical project for learning to build, measure, test, and improve an LLM-pow
 
 Northstar Shop is fictional. Customers can ask about orders, request eligible delivery address changes, and request shipping-fee refunds. The agent can read a customer's own order and change an eligible address. Every refund goes to a human reviewer. See [SPEC.md](SPEC.md) for the current policy and tool contracts.
 
+## Try the Lesson 1 agent
+
+Use Node.js 20 or newer:
+
+```sh
+npm test
+npm run dev
+```
+
+Then open `http://localhost:4173`. The browser sandbox uses fictional Alice and Bob personas and a signed server session. It demonstrates the permission boundary; it does not connect real authentication, orders, payments, or an LLM yet. See [DEPLOYMENT.md](DEPLOYMENT.md) for Vercel setup and prototype limits.
+
 ## Progress
 
 - [x] Lesson 1, step 1: define scope, roles, permissions, and acceptance examples in SPEC.md.
-- [ ] Lesson 1, step 2: build the agent and enforce tool permissions in code.
+- [x] Lesson 1, step 2: build the agent, enforce tool permissions in code, and deploy a runnable sandbox.
 - [ ] Lesson 2: add structured traces and observability.
 - [ ] Lesson 3: create a deterministic commerce world and synthetic scenarios.
 - [ ] Lessons 4–5: review traces, build a failure taxonomy, and validate evaluators.
@@ -19,6 +30,4 @@ Northstar Shop is fictional. Customers can ask about orders, request eligible de
 
 ## How we will work
 
-Each lesson adds a small, reviewable commit to this repository. We will define the behavior, build it, run a concrete example, inspect failures, and decide the next change together. The first learner decisions are listed at the end of SPEC.md.
-
-Vercel deployment comes after there is a working local agent and a basic regression suite. No live store or payment system is connected to this project.
+Each lesson adds a small, reviewable commit to this repository. We will define the behavior, build it, run a concrete example, inspect failures, and decide the next change together.

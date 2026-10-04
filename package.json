@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "demo:lesson1": "node examples/lesson1.js",
+    "dev": "node scripts/dev.js"
   },
   "engines": {
     "node": ">=20"

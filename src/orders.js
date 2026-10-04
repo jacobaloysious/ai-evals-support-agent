@@ -3,9 +3,15 @@ import { validateIndiaAddress } from "./address.js";
 /** Fictional synchronous store. A real database needs a conditional update. */
 export class OrderStore {
   #orders;
+  #addressConfirmations = new Map();
 
-  constructor(orders = []) {
+  constructor(orders = [], pendingAddressConfirmations = []) {
     this.#orders = new Map(orders.map((order) => [order.id, { ...order }]));
+    for (const { orderId, customerId } of pendingAddressConfirmations) {
+      if (this.#orders.get(orderId)?.customerId === customerId) {
+        this.#addressConfirmations.set(orderId, customerId);
+      }
+    }
   }
 
   getOrderForOwner(orderId, customerId) {
@@ -18,6 +24,20 @@ export class OrderStore {
     return [...this.#orders.values()]
       .filter((order) => order.customerId === customerId)
       .map((order) => ({ ...order }));
+  }
+
+  requireAddressConfirmation(orderId, customerId) {
+    this.#addressConfirmations.set(orderId, customerId);
+  }
+
+  needsAddressConfirmation(orderId, customerId) {
+    return this.#addressConfirmations.get(orderId) === customerId;
+  }
+
+  pendingAddressConfirmationsForOwner(customerId) {
+    return [...this.#addressConfirmations]
+      .filter(([, ownerId]) => ownerId === customerId)
+      .map(([orderId]) => ({ orderId, customerId }));
   }
 
   /** Recheck current ownership and shipping state in the same operation as the save. */
@@ -33,6 +53,7 @@ export class OrderStore {
 
     order.deliveryAddress = { ...newAddress };
     order.promisedDeliveryAt = newPromise;
+    this.#addressConfirmations.delete(orderId);
     return {
       ok: true,
       code: "ADDRESS_CHANGED",
@@ -66,12 +87,15 @@ function maskedEmail(email) {
  * The trusted server injects session, PIN directory, and fulfillment promise.
  * The model can supply only request details, never its own customer identity.
  */
-export function createOrderTools({ store, getSession, pinDirectory, quoteDeliveryPromise }) {
+export function createOrderTools({
+  store, getSession, pinDirectory, quoteDeliveryPromise, consumeAddressConfirmation = () => false,
+}) {
   if (!(store instanceof OrderStore) || typeof getSession !== "function") {
     throw new TypeError("A store and trusted session provider are required");
   }
-  if (!(pinDirectory instanceof Map) || typeof quoteDeliveryPromise !== "function") {
-    throw new TypeError("Trusted PIN and delivery promise providers are required");
+  if (!(pinDirectory instanceof Map) || typeof quoteDeliveryPromise !== "function"
+    || typeof consumeAddressConfirmation !== "function") {
+    throw new TypeError("Trusted PIN, delivery promise, and confirmation providers are required");
   }
 
   return {
@@ -117,8 +141,19 @@ export function createOrderTools({ store, getSession, pinDirectory, quoteDeliver
       if (!session) return { ok: false, code: "AUTH_REQUIRED" };
       const order = store.getOrderForOwner(orderId, session.userId);
       if (!order) return { ok: false, code: "ORDER_NOT_ACCESSIBLE" };
+      if (!order.active) return { ok: false, code: "ORDER_INACTIVE" };
+      if (order.shippedAt !== null) return { ok: false, code: "ALREADY_SHIPPED" };
       const checked = validateIndiaAddress(newAddress, pinDirectory);
-      if (!checked.ok) return checked;
+      if (!checked.ok) {
+        if (checked.code === "STATE_PIN_MISMATCH") {
+          store.requireAddressConfirmation(orderId, session.userId);
+        }
+        return checked;
+      }
+      if (store.needsAddressConfirmation(orderId, session.userId)
+        && !consumeAddressConfirmation({ orderId, customerId: session.userId, newAddress: checked.address })) {
+        return { ok: false, code: "CONFIRMATION_REQUIRED" };
+      }
       const newPromise = quoteDeliveryPromise(order, checked.address);
       if (typeof newPromise !== "string" || Number.isNaN(Date.parse(newPromise))) {
         return { ok: false, code: "PROMISE_UNAVAILABLE" };

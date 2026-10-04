@@ -215,6 +215,21 @@ test("state and PIN mismatch asks for confirmation and makes no change", () => {
   assert.deepEqual(store.getOrderForOwner(original.id, "alice").deliveryAddress, oldAddress);
 });
 
+test("confirmation requirement survives a new agent tool instance", () => {
+  const { store, tools } = fixture(alice);
+  tools.changeAddress({ orderId: original.id, newAddress: { ...newAddress, state: "Karnataka" } });
+  const restartedTools = createOrderTools({
+    store,
+    getSession: () => alice,
+    pinDirectory,
+    quoteDeliveryPromise: () => "2026-10-12T00:00:00Z",
+  });
+  assert.deepEqual(restartedTools.changeAddress({ orderId: original.id, newAddress }), {
+    ok: false, code: "CONFIRMATION_REQUIRED",
+  });
+  assert.deepEqual(store.getOrderForOwner(original.id, "alice").deliveryAddress, oldAddress);
+});
+
 test("does not change an address without a trusted revised promise", () => {
   const { store, tools } = fixture(alice, [original], () => null);
   assert.deepEqual(tools.changeAddress({ orderId: original.id, newAddress }), {
