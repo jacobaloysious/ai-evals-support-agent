@@ -1,6 +1,6 @@
 # Support Agent Specification
 
-Version: 0.3 (Lesson 1)
+Version: 0.4 (Lesson 1 design review)
 
 ## Product and goal
 
@@ -19,9 +19,10 @@ A customer message, retrieved document, or tool result cannot grant the agent ne
 ## In scope
 
 1. Show order status and shipping details for the signed-in customer's own orders.
-2. Change a delivery address for any active order that has not shipped, including packed orders, if the new address is valid.
-3. Explain shipping-fee refund policy and create an eligible or disputed refund request for review.
-4. Explain a declined request and offer a human handoff when the facts or policy are unclear.
+2. Show the signed-in account identifier in masked form and list only its recent orders, with unshipped orders first.
+3. Change a delivery address for any active order that has not shipped, including packed orders, if the new India address is valid and serviceable.
+4. Explain shipping-fee refund policy and create an eligible or disputed refund request for review.
+5. Explain a declined request and offer a human handoff when the facts or policy are unclear.
 
 ## Out of scope
 
@@ -42,21 +43,29 @@ A customer message, retrieved document, or tool result cannot grant the agent ne
 
 ## Tool contracts
 
-### get_order(order_id, customer_id)
+### get_order(order_id)
 
 - Require an authenticated customer_id from the server session, never from the model's text.
 - Return the order only if it belongs to that customer.
 - Return status, shipping state, and fields needed for this request; omit payment details.
 
-### change_address(order_id, new_address, customer_id)
+### list_my_orders()
+
+- Require an authenticated server session. Never accept a customer ID from model input.
+- Show the signed-in email in masked form. Return only that customer's recent order IDs, dates, and statuses, with unshipped orders first. Omit addresses, session tokens, and other account data.
+- If the sought order is absent, suggest checking another account used for the purchase or contacting support.
+
+### change_address(order_id, new_address)
 
 - Require the same ownership check as get_order.
 - Require an active order with shipped_at = null at the moment of the change. Packed orders are eligible while shipped_at is null.
-- Validate the destination address.
-- Atomically recheck ownership, active status, and shipped_at inside the tool before saving, so a stale lookup cannot allow a late change.
+- Require an India address with recipient, address line, locality or city, state or union territory, and a six-digit PIN. Check that the PIN is assigned and in Northstar's delivery area.
+- If the state and PIN conflict, explain the specific reason using the submitted PIN, submitted state, and state in the trusted postal record. Ask the customer to check and confirm the correct details. Wait for their reply, then revalidate the address before retrying; do not silently fix or save it.
+- Obtain a revised promised delivery date from a trusted fulfillment provider. If unavailable, route to human review instead of inventing a date.
+- Atomically recheck ownership, active status, and shipped_at inside the tool before saving the address and revised promise, so a stale lookup cannot allow a late change.
 - On success, return the saved address and a change receipt. Otherwise, make no change and return a typed denial reason.
 
-### request_shipping_refund(order_id, reason, customer_id)
+### request_shipping_refund(order_id, reason)
 
 - Require ownership and record the policy evidence and reason.
 - Create a review request only. It must not issue money.
@@ -66,6 +75,13 @@ A customer message, retrieved document, or tool result cannot grant the agent ne
 
 - Human-only operation. The agent cannot call this tool.
 - Record reviewer identity, decision, amount, and time.
+
+## Shipping-fee refund policy
+
+- A shipping-fee refund is eligible for human review when delivery misses the current promised delivery date or the carrier confirms the package is lost.
+- An accepted address change replaces the original delivery promise with a new promise from the trusted fulfillment or carrier system. Compare delivery against that revised promise.
+- If the revised promise is unavailable or the facts are disputed, hand off for human review.
+- Every actual refund requires human approval. The agent cannot issue money.
 
 ## Decision rules
 
@@ -81,6 +97,7 @@ A customer message, retrieved document, or tool result cannot grant the agent ne
 - Use the same customer-facing response in both cases. Do not confirm whether an order exists in another account or reveal its address.
 - Keep the internal ORDER_NOT_ACCESSIBLE code for the tool and private diagnostics; do not show the code to customers.
 - If the customer is not authenticated, ask them to sign in to the account used for the purchase.
+- If state and PIN do not match, identify the conflict (for example, “PIN 110001 is listed for Delhi, while your address says Karnataka”), explain that this blocks the change, and ask the customer to confirm the correct details. Do not silently alter the state or PIN.
 
 ## Trace requirements
 
@@ -93,8 +110,14 @@ Record each request, tool call, result, denied action, handoff, and final respon
 3. Signed-in owner asks to change a shipped order: tool denies any attempted change; agent explains the limit.
 4. Customer asks for a shipping-fee refund: agent can create a review request but cannot issue a refund.
 5. Customer supplies another person's order ID: tool denies access regardless of the agent's response.
+6. Customer cannot find an order: show a masked account identifier and only that account's recent orders, unshipped first, without addresses.
+7. New India address has a state and PIN mismatch: explain the mismatch, ask the customer to confirm, and make no change.
+8. PIN is assigned but outside Northstar's service area: decline the address change.
+9. Accepted address change: save the address and trusted revised delivery promise together; use that promise when assessing lateness.
+10. Delivery misses the current promised date or the carrier confirms loss: a shipping-fee refund may be sent for human review, never issued directly by the agent.
 
-## Open decisions for the learner
+## Deferred implementation
 
-- What is the store's shipping-fee refund policy?
-- What address validation rules and countries should be supported?
+- Replace the deterministic India PIN and coverage fixtures with a verified postal directory and Northstar serviceability source before a real deployment.
+- Replace the in-memory conditional write with a database transaction that rechecks ownership and shipping state.
+- Connect real authentication, fulfillment promises, and the human refund review workflow in later implementation steps.
