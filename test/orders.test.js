@@ -17,6 +17,36 @@ function fixture(session) {
   return { store, tools };
 }
 
+test("lets the authenticated owner read permitted order details", () => {
+  const { tools } = fixture({ authenticated: true, userId: "alice" });
+  assert.deepEqual(tools.getOrder({ orderId: original.id }), {
+    ok: true,
+    code: "ORDER_FOUND",
+    order: {
+      id: original.id,
+      status: "packed",
+      shippedAt: null,
+      deliveryAddress: "1 Old Street",
+    },
+  });
+});
+
+test("does not reveal someone else's order or address", () => {
+  const { tools } = fixture({ authenticated: true, userId: "bob" });
+  assert.deepEqual(tools.getOrder({
+    orderId: original.id,
+    customerId: "alice", // A model-supplied identity cannot override Bob's session.
+  }), { ok: false, code: "ORDER_NOT_ACCESSIBLE" });
+});
+
+test("does not reveal an order without authentication", () => {
+  const { tools } = fixture(null);
+  assert.deepEqual(tools.getOrder({ orderId: original.id }), {
+    ok: false,
+    code: "AUTH_REQUIRED",
+  });
+});
+
 test("rejects an unauthenticated request without changing the order", () => {
   const { store, tools } = fixture(null);
   assert.deepEqual(tools.changeAddress({
