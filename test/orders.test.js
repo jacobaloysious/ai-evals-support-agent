@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createOrderTools, OrderStore } from "../src/orders.js";
+import { createOrderTools, OrderStore, orderLookupMessage } from "../src/orders.js";
 
 const original = {
   id: "order-100",
@@ -45,6 +45,18 @@ test("does not reveal an order without authentication", () => {
     ok: false,
     code: "AUTH_REQUIRED",
   });
+});
+
+test("missing and other-owned orders get the same useful customer response", () => {
+  const { tools } = fixture({ authenticated: true, userId: "bob" });
+  const otherOwned = tools.getOrder({ orderId: original.id });
+  const missing = tools.getOrder({ orderId: "missing-order" });
+  assert.deepEqual(otherOwned, missing);
+  assert.equal(
+    orderLookupMessage(otherOwned),
+    "I can't find that order under the account you're signed into. Please check the order number or sign into the account used for the purchase.",
+  );
+  assert.equal(orderLookupMessage(missing), orderLookupMessage(otherOwned));
 });
 
 test("rejects an unauthenticated request without changing the order", () => {
