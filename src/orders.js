@@ -44,7 +44,7 @@ export class OrderStore {
 }
 
 /**
- * Expose only orderId and newAddress to the model. The trusted server supplies
+ * Expose only request details to the model. The trusted server supplies
  * getSession; any customerId included in model arguments is ignored.
  */
 export function createOrderTools({ store, getSession }) {
@@ -53,6 +53,25 @@ export function createOrderTools({ store, getSession }) {
   }
 
   return {
+    getOrder({ orderId }) {
+      const session = getSession();
+      if (session?.authenticated !== true || !session.userId) {
+        return { ok: false, code: "AUTH_REQUIRED" };
+      }
+      const order = store.getOrderForOwner(orderId, session.userId);
+      if (!order) return { ok: false, code: "ORDER_NOT_ACCESSIBLE" };
+      return {
+        ok: true,
+        code: "ORDER_FOUND",
+        order: {
+          id: order.id,
+          status: order.status,
+          shippedAt: order.shippedAt,
+          deliveryAddress: order.deliveryAddress,
+        },
+      };
+    },
+
     changeAddress({ orderId, newAddress }) {
       const session = getSession();
       if (session?.authenticated !== true || !session.userId) {
