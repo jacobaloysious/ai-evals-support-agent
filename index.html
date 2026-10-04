@@ -39,6 +39,14 @@
         <div class="session-actions"><button id="reset" class="text-button">Reset demo</button><button id="sign-out" class="text-button">Switch customer</button></div>
       </section>
 
+      <section class="panel chat-panel">
+        <div class="section-head"><div><p class="eyebrow">LESSON 1 · MODEL + TOOLS</p><h2>Chat with the support agent</h2></div><span class="activity-hint">Uses this signed-in demo session</span></div>
+        <p class="section-copy">Ask about your orders, request an address change, or ask for a shipping refund. The model chooses from server tools; policy and account checks still run on the server.</p>
+        <div id="chat-messages" class="chat-messages" aria-live="polite"><p class="empty-state">Try: “List my unshipped orders first.”</p></div>
+        <form id="chat-form" class="chat-form"><label class="sr-only" for="chat-input">Message</label><textarea id="chat-input" rows="2" maxlength="500" placeholder="What can I help you with?" required></textarea><button id="send-chat" class="primary">Send</button></form>
+        <p class="helper">OpenAI API calls use the server's OPENAI_API_KEY. The existing lesson controls work without a key.</p>
+      </section>
+
       <div class="dashboard">
         <div class="left-column">
           <section class="panel clock-panel">

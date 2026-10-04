@@ -1,6 +1,8 @@
 const $ = (id) => document.getElementById(id);
 let currentState = { signedIn: false };
 let busy = false;
+let chatHistory = [];
+let preparedAddressProposal = null;
 
 async function api(payload) {
   const response = await fetch("/api/demo", {
@@ -60,6 +62,7 @@ function addActivity(label, result) {
     $("confirm-address").hidden = false;
   } else if (result.outcome === "changed") {
     $("confirm-address").hidden = true;
+    preparedAddressProposal = null;
   }
 }
 
@@ -67,6 +70,17 @@ function render() {
   $("chooser").hidden = currentState.signedIn;
   $("workspace").hidden = !currentState.signedIn;
   if (!currentState.signedIn) return;
+  const proposal = currentState.pendingAddressProposal;
+  if (proposal && preparedAddressProposal !== proposal.orderId) {
+    $("address-order-id").value = proposal.orderId;
+    $("recipient").value = proposal.newAddress.recipientName;
+    $("line1").value = proposal.newAddress.line1;
+    $("city").value = proposal.newAddress.city;
+    $("state").value = proposal.newAddress.state;
+    $("pin").value = proposal.newAddress.pin;
+    $("confirm-address").hidden = false;
+    preparedAddressProposal = proposal.orderId;
+  }
   $("persona-name").textContent = currentState.persona === "alice" ? "Alice" : "Bob";
   $("demo-date").textContent = currentState.demoNow.slice(0, 10);
   const orders = $("orders");
@@ -102,10 +116,58 @@ function render() {
   }
 }
 
+function appendChat(role, content) {
+  const list = $("chat-messages");
+  list.querySelector(".empty-state")?.remove();
+  const bubble = document.createElement("article");
+  bubble.className = `chat-message ${role}`;
+  const label = document.createElement("strong");
+  label.textContent = role === "user" ? "You" : "Support agent";
+  const text = document.createElement("p");
+  text.textContent = content;
+  bubble.append(label, text);
+  list.append(bubble);
+  list.scrollTop = list.scrollHeight;
+}
+
+$("chat-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (busy) return;
+  const content = $("chat-input").value.trim();
+  if (!content) return;
+  chatHistory.push({ role: "user", content });
+  chatHistory = chatHistory.slice(-8);
+  appendChat("user", content);
+  $("chat-input").value = "";
+  busy = true;
+  $("send-chat").disabled = true;
+  $("error").hidden = true;
+  try {
+    const data = await api({ action: "chat", messages: chatHistory });
+    currentState = data.state;
+    render();
+    chatHistory.push({ role: "assistant", content: data.result.message });
+    chatHistory = chatHistory.slice(-8);
+    appendChat("assistant", data.result.message);
+    addActivity("Conversational agent", data.result);
+  } catch (error) {
+    chatHistory.pop();
+    $("error").textContent = error.message;
+    $("error").hidden = false;
+  } finally {
+    busy = false;
+    $("send-chat").disabled = false;
+  }
+});
+
 document.querySelectorAll("[data-persona]").forEach((button) => {
   button.addEventListener("click", async () => {
     await act("Demo session", { action: "select_persona", persona: button.dataset.persona });
     if (!currentState.signedIn) return;
+    chatHistory = [];
+    preparedAddressProposal = null;
+    $("chat-messages").replaceChildren();
+    appendChat("assistant", "Hi! I can help with orders in this signed-in demo session.");
     const bob = currentState.persona === "bob";
     for (const id of ["lookup-id", "address-order-id", "refund-order-id"]) {
       $(id).value = bob ? "NS-2001" : "NS-1001";
@@ -120,6 +182,10 @@ document.querySelectorAll("[data-persona]").forEach((button) => {
 });
 $("sign-out").addEventListener("click", () => act("Switch customer", { action: "sign_out" }));
 $("reset").addEventListener("click", () => {
+  chatHistory = [];
+  preparedAddressProposal = null;
+  $("chat-messages").replaceChildren();
+  appendChat("assistant", "Hi! I can help with orders in this signed-in demo session.");
   $("confirm-address").hidden = true;
   $("activity").replaceChildren();
   act("Reset demo", { action: "reset" });

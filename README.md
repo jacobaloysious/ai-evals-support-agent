@@ -15,12 +15,13 @@ npm test
 npm run dev
 ```
 
-Then open `http://localhost:4173`. The browser sandbox uses fictional Alice and Bob personas and a signed server session. It demonstrates the permission boundary; it does not connect real authentication, orders, payments, or an LLM yet. See [DEPLOYMENT.md](DEPLOYMENT.md) for Vercel setup and prototype limits.
+Then open `http://localhost:4173`. The browser sandbox uses fictional Alice and Bob personas and a signed server session. The chat uses the OpenAI Agents SDK and server-side tools; set `OPENAI_API_KEY` in the server environment to enable model calls. The structured lesson controls work without it. This does not connect real authentication, orders, payments, or refunds. See [DEPLOYMENT.md](DEPLOYMENT.md) for Vercel setup and prototype limits.
 
 ## Progress
 
 - [x] Lesson 1, step 1: define scope, roles, permissions, and acceptance examples in SPEC.md.
 - [x] Lesson 1, step 2: build the agent, enforce tool permissions in code, and deploy a runnable sandbox.
+- [x] Lesson 1, step 3: add an OpenAI Agents SDK conversational loop over the same server-enforced tools.
 - [ ] Lesson 2: add structured traces and observability.
 - [ ] Lesson 3: create a deterministic commerce world and synthetic scenarios.
 - [ ] Lessons 4–5: review traces, build a failure taxonomy, and validate evaluators.

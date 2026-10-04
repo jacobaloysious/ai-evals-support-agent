@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createSupportAgent } from "../src/agent.js";
 import { createOrderTools, OrderStore } from "../src/orders.js";
 import { createAgentRefundTools, RefundRequestStore } from "../src/refund_requests.js";
+import { createConversationalAgent } from "../src/conversational_agent.js";
 
 const COOKIE = "northstar_demo";
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -128,7 +129,25 @@ function createWorld(state) {
   const refundTools = createAgentRefundTools({
     orders: store, requests, getSession: () => session, getNow: () => state.demoNow,
   });
-  return { store, requests, orderTools, agent: createSupportAgent({ orderTools, refundTools }) };
+  const boundedRefundTools = {
+    requestShippingRefund(args) {
+      if (state.requests.length >= 5) return { ok: false, code: "DEMO_QUEUE_FULL" };
+      return refundTools.requestShippingRefund(args);
+    },
+  };
+  return {
+    store,
+    requests,
+    orderTools,
+    agent: createSupportAgent({ orderTools, refundTools }),
+    chatAgent: createConversationalAgent({
+      orderTools,
+      refundTools: boundedRefundTools,
+      onAddressConfirmationNeeded: (proposal) => {
+        state.pendingAddressProposal = proposal;
+      },
+    }),
+  };
 }
 
 function snapshot(state, world) {
@@ -142,6 +161,7 @@ function snapshot(state, world) {
     demoNow: state.demoNow,
     orders: world.orderTools.listMyOrders().orders,
     requests: state.requests.map(({ id, orderId, status }) => ({ id, orderId, status })),
+    pendingAddressProposal: state.pendingAddressProposal ?? null,
   };
 }
 
@@ -200,11 +220,30 @@ export default {
       }
       state.confirmedAddress = { orderId, address: newAddress };
       result = world.agent.handleProposal({ action: "change_address", args: { orderId, newAddress } });
+      if (result.outcome === "changed") state.pendingAddressProposal = null;
+    } else if (body.action === "chat") {
+      if (!process.env.OPENAI_API_KEY) {
+        return json({ error: "Chat needs an OPENAI_API_KEY on the server. The lesson controls still work without it." }, 503);
+      }
+      if (!Array.isArray(body.messages) || body.messages.length < 1 || body.messages.length > 8
+        || body.messages.some((message) => !message || !["user", "assistant"].includes(message.role)
+          || typeof message.content !== "string" || message.content.length > 500)) {
+        return json({ error: "Chat must contain up to eight short user and assistant messages." }, 400);
+      }
+      if (body.messages.at(-1).role !== "user") return json({ error: "The last chat message must be from the customer." }, 400);
+      const reply = await world.chatAgent.reply(body.messages);
+      result = { outcome: "answered", message: reply.message, turns: reply.turns };
     } else if (body.action === "propose") {
       if (state.requests.length >= 5 && body.proposal?.action === "request_shipping_refund") {
         return json({ error: "Demo review queue is full. Reset the demo to continue." }, 429);
       }
       result = world.agent.handleProposal(body.proposal);
+      if (result.outcome === "needs_confirmation" && result.reasonCode === "STATE_PIN_MISMATCH") {
+        state.pendingAddressProposal = {
+          orderId: body.proposal?.args?.orderId,
+          newAddress: body.proposal?.args?.newAddress,
+        };
+      }
     } else if (body.action === "reset") {
       const reset = initialState(state.userId);
       const resetWorld = createWorld(reset);

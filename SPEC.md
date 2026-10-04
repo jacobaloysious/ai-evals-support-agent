@@ -1,6 +1,6 @@
 # Support Agent Specification
 
-Version: 0.5 (Lesson 1 agent draft)
+Version: 0.6 (Lesson 1 conversational agent)
 
 ## Product and goal
 
@@ -121,7 +121,7 @@ Record each request, tool call, result, denied action, handoff, and final respon
 
 ## Lesson 1 prototype boundary
 
-The runnable example accepts structured action proposals as a stand-in for model output. The customer agent receives only order tools and a refund-request tool; the human review tool is constructed separately. After a state/PIN mismatch, the order tool holds the change until the server supplies a customer confirmation signal for the corrected address. This in-memory hold survives a new agent instance. Server-supplied sessions, order records, PIN fixtures, delivery promises, and clock values drive authorization and policy decisions. No live LLM, login service, postal directory, fulfillment system, payment processor, or durable review queue is connected yet.
+The runnable example has both structured lesson controls and an OpenAI Agents SDK chat loop. The customer agent receives only order tools and a refund-request tool; the human review tool is constructed separately. After a state/PIN mismatch, the order tool holds the change until the customer corrects the details and presses the separate confirmation button. A conversational “yes” alone cannot authorize it. The in-memory hold survives a new agent instance. Server-supplied sessions, order records, PIN fixtures, delivery promises, and clock values drive authorization and policy decisions. The chat needs an OpenAI API key. No real login service, postal directory, fulfillment system, payment processor, or durable review queue is connected.
 
 The browser demo is a public learning sandbox with fictional Alice and Bob personas. Selecting a persona creates a signed, HTTP-only server session containing only that persona's fictional orders. Anyone may select either persona; this is not real customer authentication. The server reads identity only from the signed session and never from a proposed action. Session state, address-confirmation hold, simulated date, and review requests persist in the signed cookie across serverless requests. The demo contains no real customer data or money movement. See [DEPLOYMENT.md](DEPLOYMENT.md) for setup and limits.
 
