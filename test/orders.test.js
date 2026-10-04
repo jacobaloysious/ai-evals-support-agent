@@ -1,0 +1,62 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { createOrderTools, OrderStore } from "../src/orders.js";
+
+const original = {
+  id: "order-100",
+  customerId: "alice",
+  status: "packed",
+  active: true,
+  shippedAt: null,
+  deliveryAddress: "1 Old Street",
+};
+
+function fixture(session) {
+  const store = new OrderStore([original]);
+  const tools = createOrderTools({ store, getSession: () => session });
+  return { store, tools };
+}
+
+test("rejects an unauthenticated request without changing the order", () => {
+  const { store, tools } = fixture(null);
+  assert.deepEqual(tools.changeAddress({
+    orderId: original.id,
+    newAddress: "2 New Street",
+  }), { ok: false, code: "AUTH_REQUIRED" });
+  assert.equal(store.getOrderForOwner(original.id, "alice").deliveryAddress, "1 Old Street");
+});
+
+test("does not let a signed-in customer change someone else's order", () => {
+  const { store, tools } = fixture({ authenticated: true, userId: "bob" });
+  assert.deepEqual(tools.changeAddress({
+    orderId: original.id,
+    newAddress: "2 New Street",
+    customerId: "alice", // Untrusted model input must not override Bob's session.
+  }), { ok: false, code: "ORDER_NOT_ACCESSIBLE" });
+  assert.equal(store.getOrderForOwner(original.id, "alice").deliveryAddress, "1 Old Street");
+});
+
+test("allows the authenticated owner to change a packed but unshipped order", () => {
+  const { store, tools } = fixture({ authenticated: true, userId: "alice" });
+  assert.deepEqual(tools.changeAddress({
+    orderId: original.id,
+    newAddress: " 2 New Street ",
+  }), {
+    ok: true,
+    code: "ADDRESS_CHANGED",
+    orderId: original.id,
+    deliveryAddress: "2 New Street",
+  });
+  assert.equal(store.getOrderForOwner(original.id, "alice").deliveryAddress, "2 New Street");
+});
+
+test("rechecks shipping state when saving after an earlier unshipped read", () => {
+  const { store, tools } = fixture({ authenticated: true, userId: "alice" });
+  assert.equal(store.getOrderForOwner(original.id, "alice").shippedAt, null);
+  store.markShipped(original.id, "2026-10-04T00:00:00Z");
+  assert.deepEqual(tools.changeAddress({
+    orderId: original.id,
+    newAddress: "2 New Street",
+  }), { ok: false, code: "ALREADY_SHIPPED" });
+  assert.equal(store.getOrderForOwner(original.id, "alice").deliveryAddress, "1 Old Street");
+});
