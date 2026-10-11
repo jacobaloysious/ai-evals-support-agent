@@ -28,7 +28,7 @@ Then open `http://localhost:4173`. The browser sandbox uses fictional Alice and 
 - [x] Lesson 3, step 3: evaluate a multi-turn refund conversation as a whole (`npm run eval:conversation`).
 - [x] Lessons 4–5: classify traces and validate the grader with known-good and known-bad cases.
 - [x] Lesson 6: add regression tests and a GitHub Actions gate.
-- [ ] Lesson 7: red-team the agent and document governance controls.
+- [x] Lesson 7: red-team the agent and document governance controls (`docs/lesson7-red-team.md`).
 - [ ] Lessons 8–9: improve accuracy and cost against held-out cases.
 
 ## How we will work
