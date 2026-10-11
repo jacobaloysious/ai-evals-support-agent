@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
+    "eval:lesson3": "node evals/lesson3.js",
+    "eval:model": "node evals/model-eval.js",
     "demo:lesson1": "node examples/lesson1.js",
     "dev": "node scripts/dev.js"
   },

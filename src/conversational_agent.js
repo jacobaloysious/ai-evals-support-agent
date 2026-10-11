@@ -15,16 +15,20 @@ function resultText(value) {
 }
 
 /** Create one model-backed agent whose tools close over this request's trusted session. */
-export function createConversationalAgent({ orderTools, refundTools, onAddressConfirmationNeeded }) {
+export function createConversationalAgent({ orderTools, refundTools, onAddressConfirmationNeeded, onToolResult }) {
   let activeTraceId;
   const record = (result, toolName, proposal) => {
     if (result.code === "STATE_PIN_MISMATCH") onAddressConfirmationNeeded?.(proposal);
+    const event = {
+      traceId: activeTraceId,
+      tool: toolName,
+      code: result.code ?? (result.ok ? "OK" : "UNKNOWN"),
+    };
+    onToolResult?.(event);
     if (activeTraceId) {
       console.info(JSON.stringify({
         event: "agent_tool_result",
-        traceId: activeTraceId,
-        tool: toolName,
-        code: result.code ?? (result.ok ? "OK" : "UNKNOWN"),
+        ...event,
       }));
     }
     return resultText(result);

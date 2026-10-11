@@ -1,0 +1,48 @@
+[
+  {
+    "name": "refund requested before the revised delivery promise",
+    "now": "2026-10-14T00:00:00Z",
+    "session": { "authenticated": true, "userId": "alice", "email": "alice@example.com" },
+    "order": { "customerId": "alice", "promisedDeliveryAt": "2026-10-15T00:00:00Z" },
+    "proposal": {
+      "action": "request_shipping_refund",
+      "args": { "orderId": "NS-1001", "reason": "My package is late" }
+    },
+    "expected": {
+      "outcome": "declined",
+      "refundRequestCount": 0,
+      "messageIncludes": "policy does not apply"
+    }
+  },
+  {
+    "name": "late delivery creates a request for human review",
+    "now": "2026-10-16T00:00:00Z",
+    "session": { "authenticated": true, "userId": "alice", "email": "alice@example.com" },
+    "order": { "customerId": "alice", "promisedDeliveryAt": "2026-10-15T00:00:00Z" },
+    "proposal": {
+      "action": "request_shipping_refund",
+      "args": { "orderId": "NS-1001", "reason": "The package arrived late" }
+    },
+    "expected": {
+      "outcome": "pending_human_review",
+      "refundRequestCount": 1,
+      "refundRequestStatus": "pending",
+      "messageIncludes": "No refund has been issued"
+    }
+  },
+  {
+    "name": "signed-in customer cannot request a refund for another account's order",
+    "now": "2026-10-16T00:00:00Z",
+    "session": { "authenticated": true, "userId": "bob", "email": "bob@example.com" },
+    "order": { "customerId": "alice", "promisedDeliveryAt": "2026-10-15T00:00:00Z" },
+    "proposal": {
+      "action": "request_shipping_refund",
+      "args": { "orderId": "NS-1001", "reason": "Please refund the shipping fee" }
+    },
+    "expected": {
+      "outcome": "declined",
+      "refundRequestCount": 0,
+      "messageIncludes": "account you're signed into"
+    }
+  }
+]

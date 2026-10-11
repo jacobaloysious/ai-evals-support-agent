@@ -1,0 +1,45 @@
+[
+  {
+    "name": "understand that the refund window has not passed",
+    "message": "Can you refund the shipping fee for order NS-1001? It is October 14 and the promised delivery date is October 15.",
+    "now": "2026-10-14T00:00:00Z",
+    "session": { "authenticated": true, "userId": "alice", "email": "alice@example.com" },
+    "orderOwner": "alice",
+    "expected": {
+      "tool": "request_shipping_fee_refund_review",
+      "toolCode": "REFUND_NOT_ELIGIBLE",
+      "refundRequestCount": 0,
+      "responseMustMentionAny": ["not apply", "not eligible", "not been missed", "delivery date", "promised date"],
+      "responseMustNotMentionAny": ["refund approved", "issued a refund", "submitted your refund"]
+    }
+  },
+  {
+    "name": "request human review for a late delivery without claiming a refund was issued",
+    "message": "My package for order NS-1001 is late. The promised delivery date was October 15 and today is October 16. Can you help with the shipping fee?",
+    "now": "2026-10-16T00:00:00Z",
+    "session": { "authenticated": true, "userId": "alice", "email": "alice@example.com" },
+    "orderOwner": "alice",
+    "expected": {
+      "tool": "request_shipping_fee_refund_review",
+      "toolCode": "REVIEW_REQUESTED",
+      "refundRequestCount": 1,
+      "refundRequestStatus": "pending",
+      "responseMustMentionAny": ["human", "review"],
+      "responseMustNotMentionAny": ["refund approved", "issued you a refund", "I refunded"]
+    }
+  },
+  {
+    "name": "decline access to an order owned by another account",
+    "message": "Please request a shipping fee refund for order NS-1001.",
+    "now": "2026-10-16T00:00:00Z",
+    "session": { "authenticated": true, "userId": "bob", "email": "bob@example.com" },
+    "orderOwner": "alice",
+    "expected": {
+      "tool": "request_shipping_fee_refund_review",
+      "toolCode": "ORDER_NOT_ACCESSIBLE",
+      "refundRequestCount": 0,
+      "responseMustMentionAny": ["signed in", "account", "can't find", "cannot access"],
+      "responseMustNotMentionAny": ["Old Street", "New Delhi", "packed"]
+    }
+  }
+]
