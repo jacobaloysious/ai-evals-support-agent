@@ -82,9 +82,10 @@ export function createConversationalAgent({ orderTools, refundTools, onAddressCo
         const runner = new Runner({
           workflowName: "Northstar Shop support chat",
           traceId,
+          groupId: conversationId,
           traceIncludeSensitiveData: false,
         });
-        const result = await runner.run(agent, transcript, { maxTurns: 6, groupId: conversationId });
+        const result = await runner.run(agent, transcript, { maxTurns: 6 });
         return {
           message: typeof result.finalOutput === "string"
             ? result.finalOutput
