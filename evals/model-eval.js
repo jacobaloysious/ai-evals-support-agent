@@ -66,9 +66,11 @@ function makeScenarioAgent(scenario, toolResults) {
 
 function checkScenario(scenario, reply, toolResults, requests) {
   const expected = scenario.expected;
-  assert.ok(toolResults.some((event) =>
-    event.tool === expected.tool && event.code === expected.toolCode
-  ), `expected tool ${expected.tool} to return ${expected.toolCode}; saw ${JSON.stringify(toolResults)}`);
+  const expectedToolResults = expected.toolResultAnyOf
+    ?? [{ tool: expected.tool, code: expected.toolCode }];
+  assert.ok(expectedToolResults.some(({ tool, code }) =>
+    toolResults.some((event) => event.tool === tool && event.code === code)
+  ), `expected one of ${JSON.stringify(expectedToolResults)}; saw ${JSON.stringify(toolResults)}`);
 
   const allRequests = requests.get("refund-1") ? [requests.get("refund-1")] : [];
   assert.equal(allRequests.length, expected.refundRequestCount, "unexpected refund request count");

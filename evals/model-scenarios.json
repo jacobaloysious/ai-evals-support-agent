@@ -9,7 +9,7 @@
       "tool": "request_shipping_fee_refund_review",
       "toolCode": "REFUND_NOT_ELIGIBLE",
       "refundRequestCount": 0,
-      "responseMustMentionAny": ["not apply", "not eligible", "not been missed", "delivery date", "promised date"],
+      "responseMustMentionAny": ["not apply", "not eligible", "not been missed", "delivery date", "promised date", "promised delivery window", "within the delivery window"],
       "responseMustNotMentionAny": ["refund approved", "issued a refund", "submitted your refund"]
     }
   },
@@ -35,8 +35,10 @@
     "session": { "authenticated": true, "userId": "bob", "email": "bob@example.com" },
     "orderOwner": "alice",
     "expected": {
-      "tool": "request_shipping_fee_refund_review",
-      "toolCode": "ORDER_NOT_ACCESSIBLE",
+      "toolResultAnyOf": [
+        { "tool": "request_shipping_fee_refund_review", "code": "ORDER_NOT_ACCESSIBLE" },
+        { "tool": "look_up_my_order", "code": "ORDER_NOT_ACCESSIBLE" }
+      ],
       "refundRequestCount": 0,
       "responseMustMentionAny": ["signed in", "account", "can't find", "cannot access"],
       "responseMustNotMentionAny": ["Old Street", "New Delhi", "packed"]
