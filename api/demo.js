@@ -1,4 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { getGlobalTraceProvider } from "@openai/agents";
 import { createSupportAgent } from "../src/agent.js";
 import { createOrderTools, OrderStore } from "../src/orders.js";
 import { createAgentRefundTools, RefundRequestStore } from "../src/refund_requests.js";
@@ -240,6 +241,16 @@ export default {
       console.info(JSON.stringify({ event: "agent_run_started", conversationId, traceId }));
       try {
         const reply = await world.chatAgent.reply(body.messages, { traceId, conversationId });
+        try {
+          await getGlobalTraceProvider().forceFlush();
+        } catch (error) {
+          console.warn(JSON.stringify({
+            event: "agent_trace_flush_failed",
+            conversationId,
+            traceId,
+            errorName: error instanceof Error ? error.name : "UnknownError",
+          }));
+        }
         console.info(JSON.stringify({ event: "agent_run_completed", conversationId, traceId, turns: reply.turns }));
         result = { outcome: "answered", message: reply.message, turns: reply.turns, traceId, conversationId };
       } catch (error) {
