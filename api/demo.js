@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { createSupportAgent } from "../src/agent.js";
 import { createOrderTools, OrderStore } from "../src/orders.js";
 import { createAgentRefundTools, RefundRequestStore } from "../src/refund_requests.js";
@@ -231,8 +231,20 @@ export default {
         return json({ error: "Chat must contain up to eight short user and assistant messages." }, 400);
       }
       if (body.messages.at(-1).role !== "user") return json({ error: "The last chat message must be from the customer." }, 400);
-      const reply = await world.chatAgent.reply(body.messages);
-      result = { outcome: "answered", message: reply.message, turns: reply.turns };
+      const traceId = `trace_${randomUUID().replaceAll("-", "")}`;
+      console.info(JSON.stringify({ event: "agent_run_started", traceId }));
+      try {
+        const reply = await world.chatAgent.reply(body.messages, { traceId });
+        console.info(JSON.stringify({ event: "agent_run_completed", traceId, turns: reply.turns }));
+        result = { outcome: "answered", message: reply.message, turns: reply.turns, traceId };
+      } catch (error) {
+        console.error(JSON.stringify({
+          event: "agent_run_failed",
+          traceId,
+          errorName: error instanceof Error ? error.name : "UnknownError",
+        }));
+        return json({ error: "Chat couldn't complete. Please try again.", traceId }, 502);
+      }
     } else if (body.action === "propose") {
       if (state.requests.length >= 5 && body.proposal?.action === "request_shipping_refund") {
         return json({ error: "Demo review queue is full. Reset the demo to continue." }, 429);

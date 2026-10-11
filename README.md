@@ -22,7 +22,7 @@ Then open `http://localhost:4173`. The browser sandbox uses fictional Alice and 
 - [x] Lesson 1, step 1: define scope, roles, permissions, and acceptance examples in SPEC.md.
 - [x] Lesson 1, step 2: build the agent, enforce tool permissions in code, and deploy a runnable sandbox.
 - [x] Lesson 1, step 3: add an OpenAI Agents SDK conversational loop over the same server-enforced tools.
-- [ ] Lesson 2: add structured traces and observability.
+- [x] Lesson 2, step 1: add named, payload-redacted agent traces and correlate them with safe Vercel logs.
 - [ ] Lesson 3: create a deterministic commerce world and synthetic scenarios.
 - [ ] Lessons 4–5: review traces, build a failure taxonomy, and validate evaluators.
 - [ ] Lesson 6: add regression tests and a GitHub Actions gate.

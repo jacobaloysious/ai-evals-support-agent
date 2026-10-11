@@ -12,7 +12,10 @@ async function api(payload) {
     body: JSON.stringify(payload),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || `Request failed (${response.status}).`);
+  if (!response.ok) {
+    const message = data.error || `Request failed (${response.status}).`;
+    throw new Error(data.traceId ? `${message} Trace ID: ${data.traceId}` : message);
+  }
   return data;
 }
 
@@ -56,6 +59,12 @@ function addActivity(label, result) {
   const message = document.createElement("p");
   message.textContent = result.message;
   item.append(title, message);
+  if (result.traceId) {
+    const trace = document.createElement("small");
+    trace.className = "trace-id";
+    trace.textContent = `Trace ID: ${result.traceId}`;
+    item.append(trace);
+  }
   list.prepend(item);
   while (list.children.length > 8) list.lastElementChild.remove();
   if (["STATE_PIN_MISMATCH", "CONFIRMATION_REQUIRED"].includes(result.reasonCode)) {

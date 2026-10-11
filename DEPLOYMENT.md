@@ -27,6 +27,10 @@ Open `http://localhost:4173`. The local server uses a development-only signing s
 - A state/PIN mismatch needs an explicit customer confirmation before an address is saved. The revised delivery promise is then used to judge a later refund request.
 - Eligible shipping-fee refunds become pending review requests. No payment is issued and the customer agent has no human decision tool.
 
+## Lesson 2: inspect an agent run
+
+Send a chat message and copy the trace ID shown in the activity entry. In the OpenAI Platform, open **Logs → Traces** and find the workflow named **Northstar Shop support chat**. The trace shows the run and its model/tool spans, while sensitive inputs and outputs are excluded. In Vercel, open the deployment's **Runtime Logs** and search for the same trace ID to see the request start, tool result codes, and completion or failure. These logs omit customer messages, addresses, and tool arguments.
+
 ## Prototype limits
 
 Anyone can choose either fictional persona. This is not production login. Session state is carried in a signed cookie, so this is not a durable order database or reviewer queue. PIN coverage and delivery promises are fixtures. The conversational model calls OpenAI and may incur API charges. There is no live carrier, payment processor, or reviewer interface. Replace these pieces before using real customer data or handling real orders.
