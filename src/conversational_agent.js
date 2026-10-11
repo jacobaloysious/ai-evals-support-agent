@@ -1,4 +1,4 @@
-import { Agent, run, tool } from "@openai/agents";
+import { Agent, Runner, tool } from "@openai/agents";
 import { z } from "zod";
 
 const addressSchema = z.object({
@@ -78,12 +78,13 @@ export function createConversationalAgent({ orderTools, refundTools, onAddressCo
       ).join("\n");
       activeTraceId = traceId;
       try {
-        const result = await run(agent, transcript, {
-          maxTurns: 6,
+        // Trace identity and redaction are Runner configuration; maxTurns is run-specific.
+        const runner = new Runner({
           workflowName: "Northstar Shop support chat",
           traceId,
           traceIncludeSensitiveData: false,
         });
+        const result = await runner.run(agent, transcript, { maxTurns: 6 });
         return {
           message: typeof result.finalOutput === "string"
             ? result.finalOutput
