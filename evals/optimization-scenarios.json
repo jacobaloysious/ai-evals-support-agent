@@ -1,0 +1,44 @@
+[
+  {
+    "name": "answer an owned order status question from order data",
+    "message": "Could you tell me the status and promised delivery date for order NS-1001?",
+    "now": "2026-10-14T00:00:00Z",
+    "session": { "authenticated": true, "userId": "alice", "email": "alice@example.com" },
+    "orderOwner": "alice",
+    "expected": {
+      "tool": "look_up_my_order",
+      "toolCode": "ORDER_FOUND",
+      "refundRequestCount": 0,
+      "responseMustMentionAny": ["packed"],
+      "responseMustNotMentionAny": ["I refunded you", "refund has been issued"]
+    }
+  },
+  {
+    "name": "list the signed-in customer's current orders",
+    "message": "I forgot the order number. Which orders are on this account, especially anything that has not shipped?",
+    "now": "2026-10-14T00:00:00Z",
+    "session": { "authenticated": true, "userId": "alice", "email": "alice@example.com" },
+    "orderOwner": "alice",
+    "expected": {
+      "tool": "list_my_orders",
+      "toolCode": "ORDERS_FOUND",
+      "refundRequestCount": 0,
+      "responseMustMentionAny": ["NS-1001"],
+      "responseMustNotMentionAny": ["1 Old Street", "I refunded you"]
+    }
+  },
+  {
+    "name": "change a valid address and report the revised delivery promise",
+    "message": "Please change the delivery address for order NS-1001 to Alice, 42 New Street, New Delhi, Delhi 110001, India.",
+    "now": "2026-10-14T00:00:00Z",
+    "session": { "authenticated": true, "userId": "alice", "email": "alice@example.com" },
+    "orderOwner": "alice",
+    "expected": {
+      "tool": "change_delivery_address",
+      "toolCode": "ADDRESS_CHANGED",
+      "refundRequestCount": 0,
+      "responseMustMentionAny": ["October 20", "2026-10-20"],
+      "responseMustNotMentionAny": ["refund approved", "issued a refund"]
+    }
+  }
+]

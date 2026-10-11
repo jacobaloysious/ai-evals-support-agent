@@ -40,6 +40,14 @@ export function gradeModelScenario(scenario, actual) {
       message: `Response did not mention any of: ${expected.responseMustMentionAny.join(", ")}`,
     });
   }
+  for (const required of expected.responseMustMentionAll ?? []) {
+    if (!response.includes(required.toLowerCase())) {
+      failures.push({
+        check: "required_response_content",
+        message: `Response did not mention required text: ${required}`,
+      });
+    }
+  }
   for (const forbidden of expected.responseMustNotMentionAny ?? []) {
     if (response.includes(forbidden.toLowerCase())) {
       failures.push({

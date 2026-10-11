@@ -12,7 +12,8 @@ if (!process.env.OPENAI_API_KEY) {
   process.exit(2);
 }
 
-const scenarios = JSON.parse(await readFile(new URL("./model-scenarios.json", import.meta.url), "utf8"));
+const scenariosPath = process.env.MODEL_EVAL_SCENARIOS || "./model-scenarios.json";
+const scenarios = JSON.parse(await readFile(new URL(scenariosPath, import.meta.url), "utf8"));
 const model = process.env.OPENAI_MODEL || "gpt-6-luna";
 const baseOrder = {
   id: "NS-1001",
@@ -41,6 +42,7 @@ const pinDirectory = new Map([[
 function makeScenarioAgent(scenario, toolResults) {
   const orders = new OrderStore([{
     ...baseOrder,
+    ...scenario.order,
     customerId: scenario.orderOwner,
   }]);
   const requests = new RefundRequestStore();
@@ -65,7 +67,7 @@ function makeScenarioAgent(scenario, toolResults) {
 }
 
 let failed = 0;
-console.log(`Model-in-the-loop eval using ${model}: ${scenarios.length} scenarios`);
+console.log(`Model-in-the-loop eval using ${model}: ${scenarios.length} scenarios (${scenariosPath})`);
 console.log("Each scenario makes a live OpenAI model call; traces are grouped by its conversation ID.");
 
 for (const scenario of scenarios) {
@@ -73,6 +75,7 @@ for (const scenario of scenarios) {
   const conversationId = randomUUID();
   const toolResults = [];
   const { agent, requests } = makeScenarioAgent(scenario, toolResults);
+  const startedAt = Date.now();
   let reply;
   let error;
 
@@ -98,6 +101,8 @@ for (const scenario of scenarios) {
   }
 
   console.log(`  tool results: ${toolResults.map(({ tool, code }) => `${tool}=${code}`).join(", ") || "none"}`);
+  console.log(`  tool calls: ${toolResults.length}`);
+  console.log(`  elapsed: ${Date.now() - startedAt} ms`);
   console.log(`  refund requests: ${requests.get("refund-1")?.status ?? "none"}`);
   console.log(`  response: ${reply.message}`);
   const firstRequest = requests.get("refund-1");

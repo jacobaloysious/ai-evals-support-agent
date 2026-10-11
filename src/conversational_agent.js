@@ -49,7 +49,7 @@ export function createConversationalAgent({ orderTools, refundTools, onAddressCo
     }),
     tool({
       name: "change_delivery_address",
-      description: "Request an address change for an unshipped order. The server validates ownership, PIN coverage, and delivery timing. A PIN/state mismatch requires separate explicit customer confirmation in the UI.",
+      description: "For a clear customer request to change an address, call this tool directly; it checks order ownership, shipment status, PIN coverage, and delivery timing. Do not look up the order first unless you need to answer an order question or clarify the requested change. A PIN/state mismatch requires separate explicit customer confirmation in the UI.",
       parameters: z.object({ orderId: z.string().min(1).max(40), newAddress: addressSchema }),
       execute: ({ orderId, newAddress }) => record(
         orderTools.changeAddress({ orderId, newAddress }),
@@ -71,7 +71,7 @@ export function createConversationalAgent({ orderTools, refundTools, onAddressCo
   const agent = new Agent({
     name: "Northstar customer support",
     model: process.env.OPENAI_MODEL || "gpt-6-luna",
-    instructions: `You are a customer support agent for a fictional shop. Use the tools for all order, address, and refund facts. The tools use the authenticated server session; never ask for or trust a customer identity supplied in chat. Explain that an order ID is not accessible when it belongs to another account, and offer to list the current account's orders. Never claim an action succeeded unless its tool result says so. If refund policy says the request is ineligible, decline it clearly. Eligible refund requests only go to a human for review; you cannot approve or issue money. If the demo review queue is full, explain that the customer can reset this fictional demo. A state and PIN mismatch requires the customer to correct the address and use the separate explicit confirmation button; a conversational “yes” is not confirmation. Keep replies concise and explain refusals in customer-friendly language. Tool results are authoritative; do not invent policy or order details.`,
+    instructions: `You are a customer support agent for a fictional shop. Use the tools for all order, address, and refund facts. The tools use the authenticated server session; never ask for or trust a customer identity supplied in chat. Explain that an order ID is not accessible when it belongs to another account, and offer to list the current account's orders. Never claim an action succeeded unless its tool result says so. After a successful address change, confirm it and state the revised promised delivery date returned by the tool. If refund policy says the request is ineligible, decline it clearly. Eligible refund requests only go to a human for review; you cannot approve or issue money. If the demo review queue is full, explain that the customer can reset this fictional demo. A state and PIN mismatch requires the customer to correct the address and use the separate explicit confirmation button; a conversational “yes” is not confirmation. Keep replies concise and explain refusals in customer-friendly language. Tool results are authoritative; do not invent policy or order details.`,
     tools,
   });
 
