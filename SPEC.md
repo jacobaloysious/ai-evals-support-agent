@@ -1,6 +1,6 @@
 # Support Agent Specification
 
-Version: 0.6 (Lesson 1 conversational agent)
+Status: Learning prototype specification. This document includes decisions made throughout Lessons 1–9.
 
 ## Product and goal
 
@@ -103,7 +103,7 @@ A customer message, retrieved document, or tool result cannot grant the agent ne
 
 ## Trace requirements
 
-Record each request, tool call, result, denied action, handoff, and final response with a trace ID. Include a reason code for every denial. Do not log passwords, card details, or authentication codes. Later lessons will add nested spans, prompt hashes, and evaluator results.
+Record requests, tool calls, typed results, denials, handoffs, and final responses with trace and conversation identifiers where available. Include a reason code for every denial. Do not log passwords, card details, or authentication codes. This prototype does not yet add structured prompt hashes or attach evaluator results to the OpenAI trace.
 
 ## Acceptance examples
 
@@ -125,8 +125,9 @@ The runnable example has both structured lesson controls and an OpenAI Agents SD
 
 The browser demo is a public learning sandbox with fictional Alice and Bob personas. Selecting a persona creates a signed, HTTP-only server session containing only that persona's fictional orders. Anyone may select either persona; this is not real customer authentication. The server reads identity only from the signed session and never from a proposed action. Session state, address-confirmation hold, simulated date, and review requests persist in the signed cookie across serverless requests. The demo contains no real customer data or money movement. See [DEPLOYMENT.md](DEPLOYMENT.md) for setup and limits.
 
-## Deferred implementation
+## Deferred work before any real deployment
 
 - Replace the deterministic India PIN and coverage fixtures with a verified postal directory and Northstar serviceability source before a real deployment.
 - Replace the in-memory conditional write with a database transaction that rechecks ownership and shipping state.
-- Connect real authentication, fulfillment promises, a durable human review workflow, and payment issuance in later implementation steps.
+- Connect real authentication, fulfillment promises, a durable human review workflow, and payment issuance.
+- Add rate limiting and usage controls to the public chat endpoint before exposing the deployed demo broadly.
