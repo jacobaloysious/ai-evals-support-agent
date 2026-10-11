@@ -98,3 +98,14 @@ test("invalid JSON shape and cross-origin writes are rejected", async () => {
   }));
   assert.equal(crossOrigin.status, 403);
 });
+
+test("chat requires an opaque UUID conversation ID", async () => {
+  const session = await call({ action: "select_persona", persona: "alice" });
+  const invalid = await call({
+    action: "chat",
+    conversationId: "customer-email@example.com",
+    messages: [{ role: "user", content: "List my orders" }],
+  }, session.cookie);
+  assert.equal(invalid.status, 400);
+  assert.equal(invalid.data.error, "Chat needs a valid conversation ID.");
+});

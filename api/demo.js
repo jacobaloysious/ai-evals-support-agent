@@ -222,6 +222,10 @@ export default {
       result = world.agent.handleProposal({ action: "change_address", args: { orderId, newAddress } });
       if (result.outcome === "changed") state.pendingAddressProposal = null;
     } else if (body.action === "chat") {
+      if (typeof body.conversationId !== "string"
+        || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.conversationId)) {
+        return json({ error: "Chat needs a valid conversation ID." }, 400);
+      }
       if (!process.env.OPENAI_API_KEY) {
         return json({ error: "Chat needs an OPENAI_API_KEY on the server. The lesson controls still work without it." }, 503);
       }
@@ -232,14 +236,16 @@ export default {
       }
       if (body.messages.at(-1).role !== "user") return json({ error: "The last chat message must be from the customer." }, 400);
       const traceId = `trace_${randomUUID().replaceAll("-", "")}`;
-      console.info(JSON.stringify({ event: "agent_run_started", traceId }));
+      const { conversationId } = body;
+      console.info(JSON.stringify({ event: "agent_run_started", conversationId, traceId }));
       try {
-        const reply = await world.chatAgent.reply(body.messages, { traceId });
-        console.info(JSON.stringify({ event: "agent_run_completed", traceId, turns: reply.turns }));
-        result = { outcome: "answered", message: reply.message, turns: reply.turns, traceId };
+        const reply = await world.chatAgent.reply(body.messages, { traceId, conversationId });
+        console.info(JSON.stringify({ event: "agent_run_completed", conversationId, traceId, turns: reply.turns }));
+        result = { outcome: "answered", message: reply.message, turns: reply.turns, traceId, conversationId };
       } catch (error) {
         console.error(JSON.stringify({
           event: "agent_run_failed",
+          conversationId,
           traceId,
           errorName: error instanceof Error ? error.name : "UnknownError",
         }));

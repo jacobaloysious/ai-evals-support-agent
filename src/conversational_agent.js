@@ -72,7 +72,7 @@ export function createConversationalAgent({ orderTools, refundTools, onAddressCo
   });
 
   return {
-    async reply(messages, { traceId } = {}) {
+    async reply(messages, { traceId, conversationId } = {}) {
       const transcript = messages.map(({ role, content }) =>
         `${role === "assistant" ? "Assistant" : "Customer"}: ${content}`,
       ).join("\n");
@@ -84,7 +84,7 @@ export function createConversationalAgent({ orderTools, refundTools, onAddressCo
           traceId,
           traceIncludeSensitiveData: false,
         });
-        const result = await runner.run(agent, transcript, { maxTurns: 6 });
+        const result = await runner.run(agent, transcript, { maxTurns: 6, groupId: conversationId });
         return {
           message: typeof result.finalOutput === "string"
             ? result.finalOutput

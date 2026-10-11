@@ -2,6 +2,7 @@ const $ = (id) => document.getElementById(id);
 let currentState = { signedIn: false };
 let busy = false;
 let chatHistory = [];
+let conversationId = crypto.randomUUID();
 let preparedAddressProposal = null;
 
 async function api(payload) {
@@ -64,6 +65,12 @@ function addActivity(label, result) {
     trace.className = "trace-id";
     trace.textContent = `Trace ID: ${result.traceId}`;
     item.append(trace);
+  }
+  if (result.conversationId) {
+    const conversation = document.createElement("small");
+    conversation.className = "trace-id";
+    conversation.textContent = `Conversation ID: ${result.conversationId}`;
+    item.append(conversation);
   }
   list.prepend(item);
   while (list.children.length > 8) list.lastElementChild.remove();
@@ -152,7 +159,7 @@ $("chat-form").addEventListener("submit", async (event) => {
   $("send-chat").disabled = true;
   $("error").hidden = true;
   try {
-    const data = await api({ action: "chat", messages: chatHistory });
+    const data = await api({ action: "chat", conversationId, messages: chatHistory });
     currentState = data.state;
     render();
     chatHistory.push({ role: "assistant", content: data.result.message });
@@ -174,6 +181,7 @@ document.querySelectorAll("[data-persona]").forEach((button) => {
     await act("Demo session", { action: "select_persona", persona: button.dataset.persona });
     if (!currentState.signedIn) return;
     chatHistory = [];
+    conversationId = crypto.randomUUID();
     preparedAddressProposal = null;
     $("chat-messages").replaceChildren();
     appendChat("assistant", "Hi! I can help with orders in this signed-in demo session.");
@@ -192,6 +200,7 @@ document.querySelectorAll("[data-persona]").forEach((button) => {
 $("sign-out").addEventListener("click", () => act("Switch customer", { action: "sign_out" }));
 $("reset").addEventListener("click", () => {
   chatHistory = [];
+  conversationId = crypto.randomUUID();
   preparedAddressProposal = null;
   $("chat-messages").replaceChildren();
   appendChat("assistant", "Hi! I can help with orders in this signed-in demo session.");

@@ -29,7 +29,7 @@ Open `http://localhost:4173`. The local server uses a development-only signing s
 
 ## Lesson 2: inspect an agent run
 
-Send a chat message and copy the trace ID shown in the activity entry. In the OpenAI Platform, open **Logs → Traces** and find the workflow named **Northstar Shop support chat**. The trace shows the run and its model/tool spans, while sensitive inputs and outputs are excluded. In Vercel, open the deployment's **Runtime Logs** and search for the same trace ID to see the request start, tool result codes, and completion or failure. These logs omit customer messages, addresses, and tool arguments.
+Each chat has a conversation ID, and each submitted question has its own trace ID. The OpenAI Agents SDK uses the conversation ID as `groupId` so its traces can be linked; the activity entry shows both IDs. In OpenAI **Logs → Traces**, find the workflow named **Northstar Shop support chat** and use the group ID to review the conversation's separate runs. In Vercel **Runtime Logs**, search for the conversation ID to find each run's start and completion or failure, then use that run's trace ID to find its tool result codes. The trace ID still identifies one run. Traces may contain prompt and tool context, so inspect what the dashboard records before using real customer data.
 
 ## Prototype limits
 
