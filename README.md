@@ -24,8 +24,9 @@ Then open `http://localhost:4173`. The browser sandbox uses fictional Alice and 
 - [x] Lesson 1, step 3: add an OpenAI Agents SDK conversational loop over the same server-enforced tools.
 - [x] Lesson 2, step 1: add named, payload-redacted agent traces and correlate them with safe Vercel logs.
 - [x] Lesson 3, step 1: add deterministic refund scenarios and a repeatable policy eval runner (`npm run eval:lesson3`).
-- [ ] Lesson 3, step 2: run model-in-the-loop scenarios (`npm run eval:model`; requires a local `OPENAI_API_KEY`).
-- [ ] Lessons 4–5: review traces, build a failure taxonomy, and validate evaluators.
+- [x] Lesson 3, step 2: run model-in-the-loop scenarios (`npm run eval:model`; requires a local `OPENAI_API_KEY`).
+- [x] Lessons 4–5: classify traces and validate the grader with known-good and known-bad cases.
+- [ ] Lesson 3, step 3: evaluate multi-turn customer conversations as a whole.
 - [ ] Lesson 6: add regression tests and a GitHub Actions gate.
 - [ ] Lesson 7: red-team the agent and document governance controls.
 - [ ] Lessons 8–9: improve accuracy and cost against held-out cases.

@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { getGlobalTraceProvider } from "@openai/agents";
 import { createConversationalAgent } from "../src/conversational_agent.js";
 import { createOrderTools, OrderStore } from "../src/orders.js";
 import { createAgentRefundTools, RefundRequestStore } from "../src/refund_requests.js";
+import { gradeModelScenario } from "./grading.js";
 
 if (!process.env.OPENAI_API_KEY) {
   console.error("Model eval not run: set OPENAI_API_KEY in your local environment first.");
@@ -64,28 +64,6 @@ function makeScenarioAgent(scenario, toolResults) {
   return { agent, requests };
 }
 
-function checkScenario(scenario, reply, toolResults, requests) {
-  const expected = scenario.expected;
-  const expectedToolResults = expected.toolResultAnyOf
-    ?? [{ tool: expected.tool, code: expected.toolCode }];
-  assert.ok(expectedToolResults.some(({ tool, code }) =>
-    toolResults.some((event) => event.tool === tool && event.code === code)
-  ), `expected one of ${JSON.stringify(expectedToolResults)}; saw ${JSON.stringify(toolResults)}`);
-
-  const allRequests = requests.get("refund-1") ? [requests.get("refund-1")] : [];
-  assert.equal(allRequests.length, expected.refundRequestCount, "unexpected refund request count");
-  if (expected.refundRequestStatus) {
-    assert.equal(allRequests[0]?.status, expected.refundRequestStatus, "unexpected refund request status");
-  }
-
-  const response = reply.message.toLowerCase();
-  assert.ok(expected.responseMustMentionAny.some((text) => response.includes(text)),
-    `response did not mention any of: ${expected.responseMustMentionAny.join(", ")}`);
-  for (const forbidden of expected.responseMustNotMentionAny) {
-    assert.ok(!response.includes(forbidden.toLowerCase()), `response included prohibited text: ${forbidden}`);
-  }
-}
-
 let failed = 0;
 console.log(`Model-in-the-loop eval using ${model}: ${scenarios.length} scenarios`);
 console.log("Each scenario makes a live OpenAI model call; traces are grouped by its conversation ID.");
@@ -122,12 +100,20 @@ for (const scenario of scenarios) {
   console.log(`  tool results: ${toolResults.map(({ tool, code }) => `${tool}=${code}`).join(", ") || "none"}`);
   console.log(`  refund requests: ${requests.get("refund-1")?.status ?? "none"}`);
   console.log(`  response: ${reply.message}`);
-  try {
-    checkScenario(scenario, reply, toolResults, requests);
+  const firstRequest = requests.get("refund-1");
+  const grade = gradeModelScenario(scenario, {
+    response: reply.message,
+    toolResults,
+    refundRequests: firstRequest ? [firstRequest] : [],
+  });
+  if (grade.passed) {
     console.log("  eval: PASS");
-  } catch (checkError) {
+  } else {
     failed += 1;
-    console.error(`  eval: FAIL — ${checkError.message}`);
+    console.error("  eval: FAIL");
+    for (const failure of grade.failures) {
+      console.error(`    ${failure.check}: ${failure.message}`);
+    }
   }
 }
 
