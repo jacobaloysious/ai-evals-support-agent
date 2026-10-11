@@ -1,0 +1,28 @@
+[
+  {
+    "name": "recheck a shipping refund after the delivery promise passes",
+    "orderId": "NS-1001",
+    "customerId": "alice",
+    "promisedDeliveryAt": "2026-10-15T00:00:00Z",
+    "turns": [
+      {
+        "name": "before the promise",
+        "now": "2026-10-14T00:00:00Z",
+        "message": "Can I get the shipping fee refunded for order NS-1001? The delivery promise is October 15 and today is October 14.",
+        "expectedToolResult": { "tool": "request_shipping_fee_refund_review", "code": "REFUND_NOT_ELIGIBLE" },
+        "expectedRefundRequestCount": 0,
+        "responseMustMentionAny": ["promised delivery window", "within its delivery promise", "not eligible", "does not apply", "not late"]
+      },
+      {
+        "name": "after the promise",
+        "now": "2026-10-16T00:00:00Z",
+        "message": "It is now October 16 and the promised date has passed. Could you check the shipping fee again?",
+        "expectedToolResult": { "tool": "request_shipping_fee_refund_review", "code": "REVIEW_REQUESTED" },
+        "expectedRefundRequestCount": 1,
+        "expectedRefundRequestStatus": "pending",
+        "responseMustMentionAny": ["human", "review"],
+        "responseMustNotMentionAny": ["approved and issued your refund", "I refunded you"]
+      }
+    ]
+  }
+]
