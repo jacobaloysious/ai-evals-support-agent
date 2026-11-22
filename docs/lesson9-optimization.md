@@ -2,12 +2,12 @@
 
 ## Change 1: preserve the revised promise in the reply
 
-The optimization run exposed a behavior gap: after the address tool returned `ADDRESS_CHANGED` with a revised promise of October 20, the model confirmed the address but omitted that promise. We made two changes:
+The development run exposed a behavior gap: after the address tool returned `ADDRESS_CHANGED` with a revised promise of October 20, the model confirmed the address but omitted that promise. We made two changes:
 
 1. Added a clear instruction to state the revised promised date returned by the tool after a successful address change.
 2. Tightened the optimization rubric and added a regression test so “the address changed” alone cannot pass.
 
-Result: the optimization-set score improved from **2/3 to 3/3** in the next run.
+Result: the three-scenario development subset improved from **2/3 to 3/3** in the next run. Those cases are now included in the main model regression suite.
 
 An alternative is to construct the final address-change confirmation in application code. That would guarantee the date appears, but it would make this response less model-generated. We tried the smaller prompt change first; a future failure would be a reason to move this policy-critical response into deterministic application code.
 
@@ -15,7 +15,7 @@ An alternative is to construct the final address-change confirmation in applicat
 
 The address-change tool already checks ownership and shipment status inside the operation. We clarified its description so the agent should call it directly for a clear change request, and look up the order first only when it needs to answer a question or clarify the request.
 
-The final run kept the score at **3/3** and used one tool call for each case. This reduced the address scenario from two calls in the preceding run to one. The tool description does not weaken the server checks.
+The final run on that three-scenario subset kept the score at **3/3** and used one tool call for each case. This reduced the address scenario from two calls in the preceding run to one. The tool description does not weaken the server checks.
 
 ## Before and after
 
@@ -27,9 +27,9 @@ The final run kept the score at **3/3** and used one tool call for each case. Th
 
 Each row is only three live requests. Latency varies, so these measurements suggest but do not prove a performance change. The last run's address request used one tool call instead of two. We cannot calculate dollar cost from this runner because it does not report token usage; one fewer tool call is a useful efficiency signal, not a dollar estimate.
 
-## Separate final validation
+## Additional scenarios
 
-Because we used the optimization set to guide changes, we did not call it a pristine holdout. We added `evals/model-final-validation-scenarios.json` with three different policy cases: a state/PIN mismatch, a shipped order, and an untrusted customer claim that a package was lost. After correcting the rubric to accept equivalent wording such as “isn't eligible” and “promised delivery window,” the final validation passed **3/3**. The agent and tool descriptions were unchanged during this final validation run.
+We also checked three different policy cases: a state/PIN mismatch, a shipped order, and an untrusted customer claim that a package was lost. After correcting the rubric to accept equivalent wording such as “isn't eligible” and “promised delivery window,” these cases passed **3/3**. They are now part of `evals/model-scenarios.json`, so future runs check them alongside the other supported behaviors. This was a separate check at the time, not an ongoing independent holdout.
 
 The first validation attempt reported 2/3 because the grader rejected the correct phrase “isn't eligible” and “within its promised delivery window.” That was a false failure, confirmed with a grading unit test. It is useful evidence that evals test the evaluator as well as the agent.
 
@@ -41,8 +41,8 @@ The first validation attempt reported 2/3 because the grader rejected the correc
 - Test fewer calls only when they preserve the same result and controls.
 - Three scenarios are a teaching example, not enough data for a production performance claim.
 
-Run the repeatable optimization comparison with:
+Run the full current single-message model suite with:
 
 ```sh
-MODEL_EVAL_SCENARIOS=./model-optimization-scenarios.json npm run eval:model
+npm run eval:model
 ```

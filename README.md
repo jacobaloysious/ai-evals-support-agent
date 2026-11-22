@@ -53,8 +53,8 @@ Read the lessons in order. Each page explains the question, implementation, comm
 | 4–5 | Classify failures and test the grader against good and bad examples | [docs/lesson4-5.md](docs/lesson4-5.md), [`evals/model-grading.js`](evals/model-grading.js) |
 | 6 | Run tests and a deterministic eval automatically in GitHub Actions | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | 7 | Try prompt injection and pressure tactics against the agent | [docs/lesson7-red-team.md](docs/lesson7-red-team.md) |
-| 8 | Establish a baseline and learn why an eval set can stop being held out | [docs/lesson8-baseline.md](docs/lesson8-baseline.md) |
-| 9 | Improve response quality and tool efficiency, then validate on separate cases | [docs/lesson9-optimization.md](docs/lesson9-optimization.md) |
+| 8 | Establish a baseline and grow the model regression suite | [docs/lesson8-baseline.md](docs/lesson8-baseline.md) |
+| 9 | Improve response quality and tool efficiency, then check the wider suite | [docs/lesson9-optimization.md](docs/lesson9-optimization.md) |
 
 ## Useful commands
 
@@ -64,9 +64,6 @@ Read the lessons in order. Each page explains the question, implementation, comm
 | `pnpm run eval:policy` | Deterministic refund-policy scenarios | No |
 | `pnpm run eval:model` | Live one-message scenarios | Yes; a run may use several model turns and tool calls |
 | `pnpm run eval:conversation` | Live multi-turn refund conversation | Yes; multiple model turns |
-| `MODEL_EVAL_SCENARIOS=./model-optimization-scenarios.json pnpm run eval:model` | Live eval against the Lesson 8–9 optimization cases | Yes |
-| `MODEL_EVAL_SCENARIOS=./model-final-validation-scenarios.json pnpm run eval:model` | Live eval against separate final policy cases | Yes |
-
 GitHub Actions runs `pnpm test` and `pnpm eval:policy`. It deliberately does not call the live model evals: those need a secret API key, incur usage, and can vary between runs.
 
 ## Prototype limits
