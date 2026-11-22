@@ -100,6 +100,18 @@ test("invalid JSON shape and cross-origin writes are rejected", async () => {
   assert.equal(crossOrigin.status, 403);
 });
 
+test("chat accepts only the supported model providers", async () => {
+  const session = await call({ action: "select_persona", persona: "alice" });
+  const invalid = await call({
+    action: "chat",
+    conversationId: "8dd8c01e-8f75-48b6-890f-314f16588030",
+    provider: "other-provider",
+    messages: [{ role: "user", content: "List my orders." }],
+  }, session.cookie);
+  assert.equal(invalid.status, 400);
+  assert.equal(invalid.data.error, "Choose a supported model provider: openai or meta.");
+});
+
 test("chat requires an opaque UUID conversation ID", async () => {
   const session = await call({ action: "select_persona", persona: "alice" });
   const invalid = await call({

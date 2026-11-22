@@ -246,8 +246,16 @@ export default {
         || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.conversationId)) {
         return json({ error: "Chat needs a valid conversation ID." }, 400);
       }
+      if (body.provider !== undefined && !["openai", "meta"].includes(body.provider)) {
+        return json({ error: "Choose a supported model provider: openai or meta." }, 400);
+      }
       let modelSettings;
-      try { modelSettings = getModelSettings(); }
+      try {
+        modelSettings = getModelSettings({
+          ...process.env,
+          MODEL_PROVIDER: body.provider ?? process.env.MODEL_PROVIDER,
+        });
+      }
       catch (error) { return json({ error: `${error.message} The lesson controls still work without model credentials.` }, 503); }
       if (!Array.isArray(body.messages) || body.messages.length < 1 || body.messages.length > 8
         || body.messages.some((message) => !message || !["user", "assistant"].includes(message.role)
@@ -257,7 +265,10 @@ export default {
       if (body.messages.at(-1).role !== "user") return json({ error: "The last chat message must be from the customer." }, 400);
       const traceId = `trace_${randomUUID().replaceAll("-", "")}`;
       const { conversationId } = body;
-      console.info(JSON.stringify({ event: "agent_run_started", conversationId, traceId }));
+      console.info(JSON.stringify({
+        event: "agent_run_started", conversationId, traceId,
+        provider: modelSettings.provider, model: modelSettings.model,
+      }));
       let reply;
       let runFailed = false;
       let runError;
@@ -287,8 +298,14 @@ export default {
         }));
         return json({ error: "Chat couldn't complete. Please try again.", traceId }, 502);
       }
-      console.info(JSON.stringify({ event: "agent_run_completed", conversationId, traceId, ...reply.metrics }));
-      result = { outcome: "answered", message: reply.message, metrics: reply.metrics, traceId, conversationId };
+      console.info(JSON.stringify({
+        event: "agent_run_completed", conversationId, traceId,
+        ...reply.metrics, provider: modelSettings.provider, model: modelSettings.model,
+      }));
+      result = {
+        outcome: "answered", message: reply.message, metrics: reply.metrics,
+        provider: modelSettings.provider, model: modelSettings.model, traceId, conversationId,
+      };
     } else if (body.action === "propose") {
       if (state.requests.length >= 5 && body.proposal?.action === "request_shipping_refund") {
         return json({ error: "Demo review queue is full. Reset the demo to continue." }, 429);

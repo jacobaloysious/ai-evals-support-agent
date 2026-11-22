@@ -29,14 +29,15 @@ pnpm run eval:policy
 pnpm run dev
 ```
 
-Open <http://localhost:4173>. The browser demo lets you choose fictional Alice and Bob personas. The structured lesson controls work without an API key. Model-backed chat defaults to OpenAI. Set the provider key and model in the server's environment before starting it. For example, in zsh:
+Open <http://localhost:4173>. The browser demo lets you choose fictional Alice and Bob personas and choose OpenAI or Meta for each chat. Changing providers starts a fresh conversation but keeps the selected demo customer. The structured lesson controls work without an API key. Configure the selected provider's key in the server environment before chatting; keys never enter browser code. For example, in zsh:
 
 ```sh
 export OPENAI_API_KEY="your-key"
+export META_MODEL_API_KEY="your-meta-key"
 pnpm run dev
 ```
 
-To use Meta Model API instead, set `MODEL_PROVIDER=meta`, `META_MODEL_API_KEY` (or Meta's documented `MODEL_API_KEY`), and optionally `META_MODEL=muse-spark-1.3`. OpenAI stays the default (`OPENAI_API_KEY`, optionally `OPENAI_MODEL=gpt-6-luna`). Never commit a real API key. Live model evals call the selected API and can incur charges.
+The chat's **Model for this chat** selector chooses which provider handles each conversation. Changing providers starts a fresh chat so a single conversation does not mix model contexts. Configure the corresponding server-side key for each provider you want to try: `OPENAI_API_KEY` for OpenAI and `META_MODEL_API_KEY` (or Meta's documented `MODEL_API_KEY`) for Meta. Optionally set `OPENAI_MODEL` or `META_MODEL` to override the defaults. Never commit a real API key. Live chats and eval runs call the selected API and can incur charges.
 
 ### Compare models and inspect the migration dashboard
 

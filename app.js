@@ -4,6 +4,13 @@ let busy = false;
 let chatHistory = [];
 let conversationId = crypto.randomUUID();
 let preparedAddressProposal = null;
+const availableProviders = {
+  openai: { label: "OpenAI", model: "gpt-6-luna" },
+  meta: { label: "Meta", model: "muse-spark-1.3" },
+};
+let selectedProvider = Object.hasOwn(availableProviders, sessionStorage.getItem("modelProvider"))
+  ? sessionStorage.getItem("modelProvider")
+  : "openai";
 
 async function api(payload) {
   const response = await fetch("/api/demo", {
@@ -132,19 +139,30 @@ function render() {
   }
 }
 
-function appendChat(role, content) {
+function appendChat(role, content, modelLabel = "") {
   const list = $("chat-messages");
   list.querySelector(".empty-state")?.remove();
   const bubble = document.createElement("article");
   bubble.className = `chat-message ${role}`;
   const label = document.createElement("strong");
-  label.textContent = role === "user" ? "You" : "Support agent";
+  label.textContent = role === "user" ? "You" : modelLabel ? `Support agent · ${modelLabel}` : "Support agent";
   const text = document.createElement("p");
   text.textContent = content;
   bubble.append(label, text);
   list.append(bubble);
   list.scrollTop = list.scrollHeight;
 }
+
+$("model-provider").value = selectedProvider;
+$("model-provider").addEventListener("change", () => {
+  selectedProvider = $("model-provider").value;
+  sessionStorage.setItem("modelProvider", selectedProvider);
+  conversationId = crypto.randomUUID();
+  chatHistory = [];
+  $("chat-messages").replaceChildren();
+  const provider = availableProviders[selectedProvider];
+  appendChat("assistant", `New chat using ${provider.label} (${provider.model}). Your signed-in demo session is unchanged.`);
+});
 
 $("chat-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -157,15 +175,17 @@ $("chat-form").addEventListener("submit", async (event) => {
   $("chat-input").value = "";
   busy = true;
   $("send-chat").disabled = true;
+  $("model-provider").disabled = true;
   $("error").hidden = true;
   try {
-    const data = await api({ action: "chat", conversationId, messages: chatHistory });
+    const data = await api({ action: "chat", conversationId, provider: selectedProvider, messages: chatHistory });
     currentState = data.state;
     render();
     chatHistory.push({ role: "assistant", content: data.result.message });
     chatHistory = chatHistory.slice(-8);
-    appendChat("assistant", data.result.message);
-    addActivity("Conversational agent", data.result);
+    const modelLabel = `${availableProviders[data.result.provider]?.label ?? data.result.provider} · ${data.result.model}`;
+    appendChat("assistant", data.result.message, modelLabel);
+    addActivity(`Conversational agent · ${modelLabel}`, data.result);
   } catch (error) {
     chatHistory.pop();
     $("error").textContent = error.message;
@@ -173,6 +193,7 @@ $("chat-form").addEventListener("submit", async (event) => {
   } finally {
     busy = false;
     $("send-chat").disabled = false;
+    $("model-provider").disabled = false;
   }
 });
 
