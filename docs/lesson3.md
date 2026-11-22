@@ -2,7 +2,7 @@
 
 ## What this eval checks
 
-The JSON file in `evals/lesson3-scenarios.json` describes customer situations using a fixed session, order, and clock. `evals/deterministic-policy-eval.js` creates fresh in-memory stores for every scenario, runs the deterministic agent interface, then compares the result and refund-request side effect with the expected behavior.
+The JSON file in `evals/deterministic-policy-scenarios.json` describes customer situations using a fixed session, order, and clock. `evals/deterministic-policy-eval.js` creates fresh in-memory stores for every scenario, runs the deterministic agent interface, then compares the result and refund-request side effect with the expected behavior.
 
 This first eval checks three policy situations:
 

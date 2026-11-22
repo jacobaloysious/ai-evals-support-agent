@@ -4,7 +4,7 @@ import { createSupportAgent } from "../src/agent.js";
 import { createOrderTools, OrderStore } from "../src/orders.js";
 import { createAgentRefundTools, RefundRequestStore } from "../src/refund_requests.js";
 
-const scenariosPath = new URL("./lesson3-scenarios.json", import.meta.url);
+const scenariosPath = new URL("./deterministic-policy-scenarios.json", import.meta.url);
 const scenarios = JSON.parse(await readFile(scenariosPath, "utf8"));
 
 const baseOrder = {
