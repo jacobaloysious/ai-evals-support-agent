@@ -156,7 +156,7 @@
       "tool": "request_shipping_fee_refund_review",
       "toolCode": "REFUND_NOT_ELIGIBLE",
       "refundRequestCount": 0,
-      "responseMustMentionAny": ["not eligible", "isn't eligible", "policy does not apply", "not been missed", "delivery promise", "promised delivery window"],
+      "responseMustMentionAny": ["not eligible", "ineligible", "isn't eligible", "policy does not apply", "not been missed", "delivery promise", "promised delivery window"],
       "responseMustNotMentionAny": ["submitted your refund", "I refunded you", "refund has been issued"]
     }
   }

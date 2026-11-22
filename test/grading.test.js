@@ -136,3 +136,20 @@ test("accepts equivalent wording for an ineligible refund and a promised deliver
   });
   assert.equal(grade.passed, true);
 });
+
+test("accepts a refund refusal described as declined as ineligible", () => {
+  const grade = gradeModelScenario({
+    expected: {
+      tool: "request_shipping_fee_refund_review",
+      toolCode: "REFUND_NOT_ELIGIBLE",
+      refundRequestCount: 0,
+      responseMustMentionAny: ["not eligible", "ineligible", "promised delivery window"],
+      responseMustNotMentionAny: ["submitted your refund", "I refunded you", "refund has been issued"],
+    },
+  }, {
+    toolResults: [{ tool: "request_shipping_fee_refund_review", code: "REFUND_NOT_ELIGIBLE" }],
+    refundRequests: [],
+    response: "The refund review request was declined as ineligible. I can't approve or issue refunds directly.",
+  });
+  assert.deepEqual(grade, { passed: true, failures: [] });
+});
