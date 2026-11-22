@@ -2,6 +2,26 @@ name: Model comparison
 
 on:
   workflow_dispatch:
+    inputs:
+      meta_model:
+        description: Meta model to compare with OpenAI
+        type: choice
+        required: true
+        default: muse-ember-1.0
+        options:
+          - muse-ember-1.0
+          - muse-spark-1.3
+      reasoning_effort:
+        description: Shared reasoning effort for both providers
+        type: choice
+        required: true
+        default: medium
+        options:
+          - minimal
+          - low
+          - medium
+          - high
+          - max
 
 permissions:
   contents: write
@@ -56,6 +76,8 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           META_MODEL_API_KEY: ${{ secrets.META_MODEL_API_KEY }}
+          META_MODEL: ${{ inputs.meta_model }}
+          MODEL_REASONING_EFFORT: ${{ inputs.reasoning_effort }}
 
       - name: Publish the key-checked report
         run: node scripts/publish-eval-report.js

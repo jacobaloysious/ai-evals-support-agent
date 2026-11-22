@@ -109,6 +109,7 @@ async function runOne(scenario, provider, modelSettings, pricing, runId) {
       runId,
       provider,
       model: modelSettings.model,
+      reasoningEffort: modelSettings.reasoningEffort ?? "provider-default",
       traceId,
       conversationId,
       latencyMs,
@@ -124,7 +125,8 @@ async function runOne(scenario, provider, modelSettings, pricing, runId) {
     };
   } catch (error) {
     return {
-      scenario: scenario.name, runId, provider, model: modelSettings.model, traceId, conversationId,
+      scenario: scenario.name, runId, provider, model: modelSettings.model,
+      reasoningEffort: modelSettings.reasoningEffort ?? "provider-default", traceId, conversationId,
       latencyMs: Math.round(performance.now() - startedAt), metrics: null, estimatedCostUsd: null,
       grade: { passed: false, failures: [{ check: "run_error", message: safeError(error).name }] },
       response: null, refundStatus: null, error: safeError(error),
@@ -190,6 +192,7 @@ async function runConversation(scenario, provider, modelSettings, pricing, runId
     const refund = requests.get("refund-1");
     return {
       scenario: scenario.name, scenarioType: "conversation", runId, provider, model: modelSettings.model,
+      reasoningEffort: modelSettings.reasoningEffort ?? "provider-default",
       traceId: observedTurns.map((turn) => turn.traceId), conversationId,
       latencyMs: Math.round(performance.now() - startedAt), metrics,
       estimatedCostUsd: estimateCost(metrics, pricing.models[modelSettings.model]),
@@ -199,6 +202,7 @@ async function runConversation(scenario, provider, modelSettings, pricing, runId
   } catch (error) {
     return {
       scenario: scenario.name, scenarioType: "conversation", runId, provider, model: modelSettings.model,
+      reasoningEffort: modelSettings.reasoningEffort ?? "provider-default",
       traceId: observedTurns.map((turn) => turn.traceId), conversationId,
       latencyMs: Math.round(performance.now() - startedAt), metrics: null, estimatedCostUsd: null,
       grade: { passed: false, failures: [{ check: "run_error", message: safeError(error).name }] },
@@ -214,11 +218,19 @@ function summarize(results, provider, model) {
   const completed = results.filter((result) => result.metrics);
   const sum = (field) => completed.every((result) => Number.isFinite(result.metrics[field]))
     ? completed.reduce((value, result) => value + result.metrics[field], 0) : null;
+  const sumUsageDetail = (field, aliases = []) => {
+    const arrays = completed.map((result) => result.metrics[ field === "cached_tokens" ? "inputTokensDetails" : "outputTokensDetails"]);
+    if (!completed.length || arrays.some((entries) => !Array.isArray(entries) || !entries.length)) return null;
+    const keys = [field, ...aliases];
+    const values = arrays.flat().map((entry) => keys.map((key) => entry[key]).find(Number.isFinite));
+    return values.every(Number.isFinite) ? values.reduce((total, value) => total + value, 0) : null;
+  };
   const costs = completed.map((result) => result.estimatedCostUsd).filter(Number.isFinite);
   const latencies = completed.map((result) => result.latencyMs);
   const gradeChecks = results.flatMap((result) => result.grade.failures);
   return {
     provider, model,
+    reasoningEffort: results[0]?.reasoningEffort ?? "provider-default",
     scenarioCount: results.length,
     completedScenarios: completed.length,
     passedScenarios: results.filter((result) => result.grade.passed).length,
@@ -228,7 +240,9 @@ function summarize(results, provider, model) {
     modelTurns: sum("modelTurns"),
     userTurns: sum("userTurns"),
     inputTokens: sum("inputTokens"),
+    cachedInputTokens: sumUsageDetail("cached_tokens", ["cachedTokens"]),
     outputTokens: sum("outputTokens"),
+    reasoningTokens: sumUsageDetail("reasoning_tokens", ["reasoningTokens"]),
     totalTokens: sum("totalTokens"),
     toolCalls: completed.reduce((total, result) => total + result.metrics.toolCalls, 0),
     medianLatencyMs: median(latencies),
@@ -261,7 +275,7 @@ export async function runComparison({
   const meta = getModelSettings({ ...process.env, MODEL_PROVIDER: "meta" });
   const runId = new Date().toISOString().replaceAll(/[:.]/g, "-") + "_" + randomUUID().slice(0, 8);
   const rows = [];
-  console.log(`Comparing ${openai.model} with ${meta.model} on ${allScenarios.length} identical scenarios (${scenarios.length} single-turn, ${conversationScenarios.length} conversation).`);
+  console.log(`Comparing ${openai.model} with ${meta.model} at ${process.env.MODEL_REASONING_EFFORT || "provider-default"} reasoning on ${allScenarios.length} identical scenarios (${scenarios.length} single-turn, ${conversationScenarios.length} conversation).`);
   console.log("Live API calls incur provider usage charges. Results and metrics are saved locally; API keys are not saved.");
   for (const scenario of allScenarios) {
     // Alternate provider order between scenarios to reduce order-related timing bias.
@@ -282,6 +296,10 @@ export async function runComparison({
     scenarioCount: allScenarios.length,
     scenarioCounts: { singleTurn: scenarios.length, conversations: conversationScenarios.length },
     repeatsPerScenario: 1,
+    reasoningEffort: process.env.MODEL_REASONING_EFFORT || "provider-default",
+    textVerbosity: process.env.MODEL_REASONING_EFFORT ? "low" : "provider-default",
+    pricingRates: Object.fromEntries([...new Set(rows.map((row) => row.model))]
+      .map((model) => [model, pricing.models[model] ?? null])),
     pricingEffectiveDate: pricing.effectiveDate,
     pricingSources: pricing.sources,
     sourceRevision,

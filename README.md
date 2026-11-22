@@ -46,10 +46,13 @@ For a local paired run, set both provider keys, start the app, and open <http://
 ```sh
 export OPENAI_API_KEY="your-openai-key"
 export META_MODEL_API_KEY="your-meta-model-api-key"
+export MODEL_REASONING_EFFORT="medium"
 pnpm run dev
 ```
 
-The report records rubric pass rate and failures, model request count, tool calls, provider-reported input/output/total tokens, end-to-end latency, and estimated token cost. “Model requests” are LLM requests; tool calls are shown separately because they do not call the model. Cost is calculated using [evals/pricing.json](evals/pricing.json), with official source links and an effective date. It is an estimate, not invoice data. Missing usage is shown as unavailable. A single pass is directional only; run multiple comparisons under similar conditions before deciding.
+Set the shared effort before starting the local app when comparing the providers. Omit it to use each provider's default.
+
+The report records rubric pass rate and failures, reasoning effort, model request count, tool calls, provider-reported input/output/total tokens, cached input tokens, reasoning tokens, end-to-end latency, and estimated token cost. “Model requests” are LLM requests; tool calls are shown separately because they do not call the model. Cost is calculated using standard API rates in [evals/pricing.json](evals/pricing.json), with official source links and an effective date; the report records the rate snapshot. It is an estimate, not invoice data. Missing usage is shown as unavailable. For a fair comparison, the GitHub workflow selects one shared reasoning effort and offers Muse Ember or Muse Spark. A single pass is directional only; run multiple comparisons under similar conditions before deciding.
 
 In production, `/evals` is a public, read-only dashboard of published mock-data reports. Start a live comparison from the repository's GitHub Actions **Model comparison** workflow. It requires write access, runs only on `main`, reads `OPENAI_API_KEY` and `META_MODEL_API_KEY` from the GitHub Actions **Production environment secrets**, and publishes the key-checked report to `eval-reports/`. Vercel redeploys that public report with the dashboard. The production page has no live model-call endpoint; only the local dashboard can start runs directly.
 

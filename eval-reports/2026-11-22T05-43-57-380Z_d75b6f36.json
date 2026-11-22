@@ -23,7 +23,7 @@
     "singleTurnSha256": "befeffc46089e599a840e009d155a1d6e1360b77acbc4765948488930c9e8b29",
     "conversationSha256": "42bc8e99edf923b666e1509f1aa812df2ef55ef1f78ecceb3eefe68996e9f1ac"
   },
-  "note": "A single pass is directional. Repeat runs under similar conditions before making a migration decision. Estimated costs use the checked-in pricing rates, not provider invoices.",
+  "note": "A single pass is directional. Repeat runs under similar conditions before making a migration decision. Estimated costs use the checked-in pricing rates, not provider invoices. OpenAI estimated costs were corrected on 2026-11-22 from discounted Batch/Flex rates to standard API rates; model metrics are unchanged.",
   "summaries": [
     {
       "provider": "openai",
@@ -42,8 +42,11 @@
       "toolCalls": 12,
       "medianLatencyMs": 3062,
       "p95LatencyMs": 7712,
-      "totalEstimatedCostUsd": 0.0011310500000000002,
-      "costCoverage": "12/12"
+      "totalEstimatedCostUsd": 0.0022621000000000004,
+      "costCoverage": "12/12",
+      "cachedInputTokens": 0,
+      "reasoningTokens": 248,
+      "reasoningEffort": "provider-default (not captured in original run)"
     },
     {
       "provider": "meta",
@@ -63,7 +66,10 @@
       "medianLatencyMs": 8656,
       "p95LatencyMs": 19206,
       "totalEstimatedCostUsd": 0.08851760000000003,
-      "costCoverage": "12/12"
+      "costCoverage": "12/12",
+      "cachedInputTokens": 19359,
+      "reasoningTokens": 12314,
+      "reasoningEffort": "provider-default (not captured in original run)"
     }
   ],
   "results": [
@@ -118,7 +124,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.00008625,
+      "estimatedCostUsd": 0.0001725,
       "grade": {
         "passed": true,
         "failures": []
@@ -289,7 +295,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.00010175,
+      "estimatedCostUsd": 0.0002035,
       "grade": {
         "passed": true,
         "failures": []
@@ -349,7 +355,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.00008109999999999999,
+      "estimatedCostUsd": 0.00016219999999999999,
       "grade": {
         "passed": true,
         "failures": []
@@ -509,7 +515,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.0001059,
+      "estimatedCostUsd": 0.0002118,
       "grade": {
         "passed": true,
         "failures": []
@@ -552,7 +558,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.00006670000000000001,
+      "estimatedCostUsd": 0.00013340000000000002,
       "grade": {
         "passed": false,
         "failures": [
@@ -726,7 +732,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.00007805,
+      "estimatedCostUsd": 0.0001561,
       "grade": {
         "passed": true,
         "failures": []
@@ -786,7 +792,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.0000733,
+      "estimatedCostUsd": 0.0001466,
       "grade": {
         "passed": true,
         "failures": []
@@ -946,7 +952,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.0000925,
+      "estimatedCostUsd": 0.000185,
       "grade": {
         "passed": true,
         "failures": []
@@ -1006,7 +1012,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.0000904,
+      "estimatedCostUsd": 0.0001808,
       "grade": {
         "passed": true,
         "failures": []
@@ -1166,7 +1172,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.00008545,
+      "estimatedCostUsd": 0.0001709,
       "grade": {
         "passed": true,
         "failures": []
@@ -1226,7 +1232,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.0000831,
+      "estimatedCostUsd": 0.0001662,
       "grade": {
         "passed": true,
         "failures": []
@@ -1572,7 +1578,7 @@
           }
         ]
       },
-      "estimatedCostUsd": 0.00018655,
+      "estimatedCostUsd": 0.0003731,
       "grade": {
         "passed": true,
         "failures": []
@@ -1581,5 +1587,25 @@
       "refundStatus": "pending",
       "error": null
     }
-  ]
+  ],
+  "pricingRates": {
+    "gpt-6-luna": {
+      "provider": "openai",
+      "inputPerMillion": 0.1,
+      "cachedInputPerMillion": 0.01,
+      "outputPerMillion": 0.5
+    },
+    "muse-spark-1.3": {
+      "provider": "meta",
+      "inputPerMillion": 1.25,
+      "cachedInputPerMillion": 0.15,
+      "outputPerMillion": 4.25
+    }
+  },
+  "reasoningEffort": "provider-default (not captured in original run)",
+  "costCorrection": {
+    "correctedAt": "2026-11-22T14:45:09.184Z",
+    "message": "Cost estimates recalculated using standard OpenAI API rates; the original report used discounted Batch/Flex rates for GPT-6 Luna."
+  },
+  "textVerbosity": "provider-default (not captured in original run)"
 }

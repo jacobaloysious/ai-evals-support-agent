@@ -2,9 +2,9 @@
 
 ## The learning goal
 
-Move the same support agent between OpenAI and Meta Model API, then use one maintained scenario suite to see what changed. The agent instructions, tools, fixtures, and grader stay the same. Only the model provider and model ID change.
+Move the same support agent between OpenAI and Meta Model API, then use one maintained scenario suite to see what changed. The agent instructions, tools, fixtures, and grader stay the same. In a controlled comparison, vary the provider and model ID while holding reasoning effort and response verbosity constant.
 
-This project uses the Agents SDK's OpenAI-compatible provider with Meta's Responses endpoint (`https://api.meta.ai/v1`). Meta documents tool calling and the OpenAI-compatible Responses API. That lets us compare the providers without rewriting the agent's tool definitions. It does **not** mean their model behavior or every API feature is identical.
+This project uses the Agents SDK's OpenAI-compatible provider with Meta's Responses endpoint (`https://api.meta.ai/v1`). Meta documents tool calling and the OpenAI-compatible Responses API. That lets us compare the providers without rewriting the agent's tool definitions. It does **not** mean their model behavior or every API feature is identical. The comparison workflow supports Muse Ember and Muse Spark and applies one selected reasoning effort to both providers so their defaults do not silently differ.
 
 ## Step 1: configure credentials
 
@@ -20,7 +20,7 @@ The app's normal chat uses `MODEL_PROVIDER` (`openai` by default, `meta` to swit
 
 ## Step 2: make a paired baseline
 
-For a local run, open <http://localhost:4173/evals> and click **Run both models**. In production, start the **Model comparison** workflow from GitHub Actions. This is manual because every scenario makes live API calls and can incur charges. Each provider receives the same scenario prompt and fixture state; their execution order alternates across scenarios to reduce timing-order bias.
+For a local run, open <http://localhost:4173/evals> and click **Run both models**. In production, start the **Model comparison** workflow from GitHub Actions and select a Meta model and shared reasoning effort. This is manual because every scenario makes live API calls and can incur charges. Each provider receives the same scenario prompt and fixture state; their execution order alternates across scenarios to reduce timing-order bias.
 
 The current comparison includes 11 single-turn model scenarios and the existing multi-turn conversation scenario. The output is one local JSON report under `eval-results/`; that directory is gitignored because reports can contain generated responses and are run artifacts. API keys are not recorded.
 
@@ -33,6 +33,7 @@ The current comparison includes 11 single-turn model scenarios and the existing 
 | Model requests | Model API requests in an agent run | Extra agent calls can increase latency and token cost |
 | Tool calls | Calls to this app's order/refund functions | Separate from provider requests; tools here use local fixtures |
 | Input/output tokens | SDK/provider-reported usage across the run | Helps explain cost and prompt/tool-loop growth |
+| Cached input/reasoning tokens | Provider-reported details when available | Cached input affects the input rate; reasoning tokens are part of billed output |
 | Estimated cost | Token counts × configured rates | Compare economics; this is an estimate, not invoice data |
 | Median/P95 latency | End-to-end time per scenario | Compare user-visible speed; this sample is small |
 
@@ -52,4 +53,4 @@ Offline unit/API tests and deterministic policy scenarios continue to run on eac
 
 ## Cost assumptions
 
-Rates live in [`evals/pricing.json`](../evals/pricing.json) with official links and an effective date. Update that file when model IDs, modes, billing rates, or dates change. The estimate uses input/output token rates and reported cached-input details; it does not represent an invoice. The selected Meta model is the Standard model ID; Meta's Contributor variant has different pricing and data-use terms and is not silently substituted.
+Rates live in [`evals/pricing.json`](../evals/pricing.json) with official links and an effective date. Update that file when model IDs, modes, billing rates, or dates change. The estimate uses standard input/output token rates and reported cached-input details; it does not represent an invoice. Meta's Contributor variant has different pricing and data-use terms and is not silently substituted.

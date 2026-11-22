@@ -28,7 +28,8 @@ function render(report) {
   $("#run-title").textContent = new Date(report.createdAt).toLocaleString();
   $("#pricing-date").textContent = `Rates effective ${report.pricingEffectiveDate}`;
   const revision = report.sourceRevision ? report.sourceRevision.slice(0, 12) : "not available";
-  $("#provenance").textContent = `Source commit ${revision}; working tree ${report.workingTreeDirty ? "had uncommitted changes" : "was clean"}. Scenario files are SHA-256 fingerprinted in the saved report.`;
+  const costCorrection = report.costCorrection?.message ? ` ${report.costCorrection.message}` : "";
+  $("#provenance").textContent = `Source commit ${revision}; reasoning effort ${report.reasoningEffort || "not recorded"}; text verbosity ${report.textVerbosity || "not recorded"}; working tree ${report.workingTreeDirty ? "had uncommitted changes" : "was clean"}. Scenario files are SHA-256 fingerprinted in the saved report.${costCorrection}`;
   $("#openai-pricing").href = report.pricingSources.openai;
   $("#meta-pricing").href = report.pricingSources.meta;
   const openai = byProvider(report, "openai");
@@ -41,7 +42,9 @@ function render(report) {
     ["Agent model turns / API requests", number(openai.modelTurns), number(meta.modelTurns), "Each model response cycle is counted as a provider request; tool calls are separate."],
     ["Tool calls", number(openai.toolCalls), number(meta.toolCalls), "Calls to the agent's local order/refund tools."],
     ["Input tokens", number(openai.inputTokens), number(meta.inputTokens), "Tokens sent to the model, summed over the run."],
+    ["Cached input tokens", number(openai.cachedInputTokens), number(meta.cachedInputTokens), "Provider-reported cached prefix tokens, included in input tokens and discounted in the estimate."],
     ["Output tokens", number(openai.outputTokens), number(meta.outputTokens), "Tokens returned by the model, summed over the run."],
+    ["Reasoning tokens", number(openai.reasoningTokens), number(meta.reasoningTokens), "Provider-reported reasoning tokens, included in output tokens and billed at the output rate."],
     ["Total tokens", number(openai.totalTokens), number(meta.totalTokens), "Provider-reported input plus output tokens."],
     ["Estimated total cost", dollars(openai.totalEstimatedCostUsd), dollars(meta.totalEstimatedCostUsd), "Rate-file estimate; not the provider invoice."],
     ["Median latency", `${number(openai.medianLatencyMs)} ms`, `${number(meta.medianLatencyMs)} ms`, "Median end-to-end scenario time."],
