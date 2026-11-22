@@ -4,6 +4,7 @@ import { createSupportAgent } from "../src/agent.js";
 import { createOrderTools, OrderStore } from "../src/orders.js";
 import { createAgentRefundTools, RefundRequestStore } from "../src/refund_requests.js";
 import { createConversationalAgent } from "../src/conversational_agent.js";
+import { getModelSettings } from "../src/model_provider.js";
 
 const COOKIE = "northstar_demo";
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -245,9 +246,9 @@ export default {
         || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.conversationId)) {
         return json({ error: "Chat needs a valid conversation ID." }, 400);
       }
-      if (!process.env.OPENAI_API_KEY) {
-        return json({ error: "Chat needs an OPENAI_API_KEY on the server. The lesson controls still work without it." }, 503);
-      }
+      let modelSettings;
+      try { modelSettings = getModelSettings(); }
+      catch (error) { return json({ error: `${error.message} The lesson controls still work without model credentials.` }, 503); }
       if (!Array.isArray(body.messages) || body.messages.length < 1 || body.messages.length > 8
         || body.messages.some((message) => !message || !["user", "assistant"].includes(message.role)
           || typeof message.content !== "string" || message.content.length > 500)) {
@@ -261,7 +262,7 @@ export default {
       let runFailed = false;
       let runError;
       try {
-        reply = await world.chatAgent.reply(body.messages, { traceId, conversationId });
+        reply = await world.chatAgent.reply(body.messages, { traceId, conversationId, modelSettings });
       } catch (error) {
         runFailed = true;
         runError = error;
@@ -286,8 +287,8 @@ export default {
         }));
         return json({ error: "Chat couldn't complete. Please try again.", traceId }, 502);
       }
-      console.info(JSON.stringify({ event: "agent_run_completed", conversationId, traceId, turns: reply.turns }));
-      result = { outcome: "answered", message: reply.message, turns: reply.turns, traceId, conversationId };
+      console.info(JSON.stringify({ event: "agent_run_completed", conversationId, traceId, ...reply.metrics }));
+      result = { outcome: "answered", message: reply.message, metrics: reply.metrics, traceId, conversationId };
     } else if (body.action === "propose") {
       if (state.requests.length >= 5 && body.proposal?.action === "request_shipping_refund") {
         return json({ error: "Demo review queue is full. Reset the demo to continue." }, 429);

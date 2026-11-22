@@ -1,0 +1,12 @@
+{
+  "effectiveDate": "2026-11-22",
+  "currency": "USD",
+  "sources": {
+    "openai": "https://developers.openai.com/api/docs/pricing",
+    "meta": "https://dev.meta.ai/docs/pricing-rate-limits"
+  },
+  "models": {
+    "gpt-6-luna": { "provider": "openai", "inputPerMillion": 0.05, "cachedInputPerMillion": 0.005, "outputPerMillion": 0.25 },
+    "muse-spark-1.3": { "provider": "meta", "inputPerMillion": 1.25, "cachedInputPerMillion": 0.15, "outputPerMillion": 4.25 }
+  }
+}

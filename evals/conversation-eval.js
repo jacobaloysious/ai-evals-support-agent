@@ -2,18 +2,17 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { getGlobalTraceProvider } from "@openai/agents";
 import { createConversationalAgent } from "../src/conversational_agent.js";
+import { getModelSettings } from "../src/model_provider.js";
 import { createOrderTools, OrderStore } from "../src/orders.js";
 import { createAgentRefundTools, RefundRequestStore } from "../src/refund_requests.js";
 import { gradeConversation } from "./conversation-grading.js";
 
-if (!process.env.OPENAI_API_KEY) {
-  console.error("Conversation eval not run: set OPENAI_API_KEY in your local environment first.");
-  console.error("The key is read by the SDK and is never printed by this script.");
-  process.exit(2);
-}
+let modelSettings;
+try { modelSettings = getModelSettings(); }
+catch (error) { console.error(`Conversation eval not run: ${error.message}`); process.exit(2); }
 
 const scenarios = JSON.parse(await readFile(new URL("./conversation-scenarios.json", import.meta.url), "utf8"));
-const model = process.env.OPENAI_MODEL || "gpt-6-luna";
+const model = modelSettings.model;
 const pinDirectory = new Map([[
   "110001",
   { assigned: true, state: "Delhi", serviceable: true },
@@ -60,6 +59,7 @@ async function runScenario(scenario) {
   const agent = createConversationalAgent({
     orderTools,
     refundTools,
+    modelSettings,
     onToolResult: (event) => toolResults.push(event),
   });
   const messages = [];

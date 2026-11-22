@@ -20,6 +20,7 @@
 7. [Red-team the support agent](lesson7-red-team.md)
 8. [Establish an eval baseline](lesson8-baseline.md)
 9. [Improve accuracy and efficiency](lesson9-optimization.md)
+10. [Compare model providers](lesson10-model-migration.md)
 
 ## Commands at a glance
 
@@ -30,6 +31,7 @@ pnpm test
 pnpm run eval:policy
 pnpm run eval:model
 pnpm run eval:conversation
+pnpm run eval:compare
 ```
 
-Only the first two commands are fully local and deterministic. The model evals need `OPENAI_API_KEY`, use API credits, and may return variable wording. The CI workflow runs the tests and deterministic eval only.
+Only the first two commands are fully local and deterministic. Live model evals use API credits and may return variable wording. Set `MODEL_PROVIDER=openai` with `OPENAI_API_KEY`, or `MODEL_PROVIDER=meta` with `META_MODEL_API_KEY`, for single-provider evals. `eval:compare` needs both keys and writes a local report. CI runs tests and deterministic evals only.

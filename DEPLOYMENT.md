@@ -4,7 +4,7 @@ This is a fictional support-agent sandbox. Alice and Bob are selectable demo per
 
 ## Try locally
 
-Use Node.js 20 or newer and pnpm 9. Install dependencies from the lockfile. The tests and deterministic evals do not need an API key. To enable the conversational agent, create an API key in the OpenAI API Platform, then set `OPENAI_API_KEY` in the server process environment before starting the server. The default model is `gpt-6-luna`; set `OPENAI_MODEL` to choose another model available to your API project.
+Use Node.js 20 or newer and pnpm 9. Install dependencies from the lockfile. The tests and deterministic evals do not need an API key. By default the conversational agent uses OpenAI: set `OPENAI_API_KEY` in the server process environment. To use Meta Model API, set `MODEL_PROVIDER=meta` and `META_MODEL_API_KEY` (Meta also documents the `MODEL_API_KEY` name); the default model is `muse-spark-1.3`. `OPENAI_MODEL` and `META_MODEL` override the model IDs.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -20,21 +20,23 @@ pnpm run dev
 
 Keep the key private: do not paste it into browser code, commit it, or store it in a `VITE_` variable. The browser talks to this project's server endpoint; only that server should read the key. ChatGPT subscriptions and API Platform billing are separate, so a ChatGPT plan does not provide API usage or credits. See [OpenAI's billing guide](https://help.openai.com/en/articles/9039756-billing-settings-in-chatgpt-vs-platform).
 
+To test Meta locally, set `MODEL_PROVIDER=meta` and export `META_MODEL_API_KEY` instead. Provider selection and key checks happen in server code.
+
 Open `http://localhost:4173`. The local server uses a development-only signing secret.
 
 ## Deploy on Vercel
 
-Vercel hosts the browser files and runs `api/demo.js` as a server-side Node.js Function. Vercel does not provide the model or API credits: the function makes requests to OpenAI using the key you provide.
+Vercel hosts the browser files and runs `api/demo.js` as a server-side Node.js Function. Vercel does not provide the model or API credits: the function makes requests to the selected provider using the key you provide.
 
 1. Push the repository to GitHub, then import it from the Vercel dashboard. Select **Other** for the framework preset if asked, leave the root directory at the repository root, and do not add a build command.
 2. In the Vercel project, open **Settings → Environment Variables**. Add:
-   - `OPENAI_API_KEY`: an API key created in the OpenAI API Platform.
+   - `OPENAI_API_KEY`: an API key created in the OpenAI API Platform (default provider), or `MODEL_PROVIDER=meta` plus `META_MODEL_API_KEY` to use Meta Model API.
    - `DEMO_SESSION_SECRET`: a unique random value of at least 32 characters, used to sign the fictional demo session.
 3. Select the environments where you want each variable available (usually **Production** and **Preview**; include **Development** if you use Vercel's local development command). Save the variables. Vercel keeps these values in project settings; do not commit them to Git.
 4. Deploy the project and open its URL. The browser UI is served as static files, while chat requests go to the server function. The API key stays on the server and is not sent to the browser.
 5. If you add or change a variable after deploying, trigger a new deployment. Environment changes apply to new deployments, not an already-running deployment. See [Vercel's environment-variable guide](https://vercel.com/docs/environment-variables/managing-environment-variables).
 
-If the page loads but chat fails, first check that `OPENAI_API_KEY` is set for the deployment environment you opened and that you redeployed after saving it. Then inspect **Vercel → project → Logs** for the function error. OpenAI API usage and billing are managed separately in the OpenAI API Platform; a ChatGPT subscription is separate from API billing. Live chats and model evals can incur API charges.
+If the page loads but chat fails, check that the selected provider's key and `MODEL_PROVIDER` are set for the deployment environment you opened, then redeploy. Inspect **Vercel → project → Logs** for the function error. Model API usage and billing are managed by that model provider; live chats and model evals can incur charges.
 
 ## What the demo proves
 

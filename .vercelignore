@@ -1,0 +1,5 @@
+# The comparison dashboard and run harness are local-only; they can initiate paid API calls.
+eval-dashboard.html
+eval-dashboard.js
+eval-dashboard.css
+evals/compare-models.js

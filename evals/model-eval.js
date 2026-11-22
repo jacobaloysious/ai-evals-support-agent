@@ -2,19 +2,18 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { getGlobalTraceProvider } from "@openai/agents";
 import { createConversationalAgent } from "../src/conversational_agent.js";
+import { getModelSettings } from "../src/model_provider.js";
 import { createOrderTools, OrderStore } from "../src/orders.js";
 import { createAgentRefundTools, RefundRequestStore } from "../src/refund_requests.js";
 import { gradeModelScenario } from "./model-grading.js";
 
-if (!process.env.OPENAI_API_KEY) {
-  console.error("Model eval not run: set OPENAI_API_KEY in your local environment first.");
-  console.error("The key is read by the SDK and is never printed by this script.");
-  process.exit(2);
-}
+let modelSettings;
+try { modelSettings = getModelSettings(); }
+catch (error) { console.error(`Model eval not run: ${error.message}`); process.exit(2); }
 
 const scenariosPath = process.env.MODEL_EVAL_SCENARIOS || "./model-scenarios.json";
 const scenarios = JSON.parse(await readFile(new URL(scenariosPath, import.meta.url), "utf8"));
-const model = process.env.OPENAI_MODEL || "gpt-6-luna";
+const model = modelSettings.model;
 const baseOrder = {
   id: "NS-1001",
   customerId: "alice",
@@ -61,6 +60,7 @@ function makeScenarioAgent(scenario, toolResults) {
   const agent = createConversationalAgent({
     orderTools,
     refundTools,
+    modelSettings,
     onToolResult: (event) => toolResults.push(event),
   });
   return { agent, requests };
@@ -68,7 +68,7 @@ function makeScenarioAgent(scenario, toolResults) {
 
 let failed = 0;
 console.log(`Model-in-the-loop eval using ${model}: ${scenarios.length} scenarios (${scenariosPath})`);
-console.log("Each scenario makes a live OpenAI model call; traces are grouped by its conversation ID.");
+console.log("Each scenario makes one live agent run, which can make multiple model requests; traces are grouped by conversation ID.");
 
 for (const scenario of scenarios) {
   const traceId = `trace_${randomUUID().replaceAll("-", "")}`;

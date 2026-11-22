@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model migration comparison</title>
+  <link rel="stylesheet" href="/eval-dashboard.css">
+  <style>.case-details{margin-top:5px;font-size:12px;font-weight:400}.case-details summary{color:#4b6558;cursor:pointer}.case-details ul{padding-left:17px}.case-details p{max-width:320px;line-height:1.45;overflow-wrap:anywhere}.case-details strong{font-weight:700}</style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="back" href="/">← Back to support agent</a>
+      <span class="local-badge">LOCAL EVAL DASHBOARD</span>
+    </header>
+    <section class="intro">
+      <p class="eyebrow">MODEL MIGRATION WORKBENCH</p>
+      <h1>Does the new model earn its place?</h1>
+      <p class="lede">Run the same support scenarios against OpenAI and Meta, then compare policy quality, usage, estimated cost, and response time.</p>
+      <div class="run-row">
+        <button id="run-comparison" class="primary">Run both models</button>
+        <span id="status" role="status">Loading saved comparisons…</span>
+      </div>
+      <p class="cost-note">One run sends each scenario through each provider once. A multi-step agent run can make multiple model requests. This uses API credits. Reports stay on this computer; keys are never written to the report.</p>
+    </section>
+
+    <section id="comparison" hidden>
+      <div class="section-head"><div><p class="eyebrow">RUN SUMMARY</p><h2 id="run-title">Comparison</h2></div><span id="pricing-date" class="muted"></span></div>
+      <div id="cards" class="cards"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Decision metric</th><th>OpenAI</th><th>Meta</th><th>How to read it</th></tr></thead>
+          <tbody id="summary-rows"></tbody>
+        </table>
+      </div>
+      <div class="section-head scenario-head"><div><p class="eyebrow">SCENARIO DETAIL</p><h2>Where did quality change?</h2></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Scenario</th><th>Type</th><th>OpenAI</th><th>Meta</th><th>User / model turns</th><th>Latency (ms)</th><th>Tokens in / out</th><th>Est. cost</th></tr></thead>
+          <tbody id="scenario-rows"></tbody>
+        </table>
+      </div>
+      <details class="method"><summary>Measurement notes</summary><p>Quality is the pass rate from the existing deterministic rubric. Model requests are LLM API calls made during each agent run. Tool calls are measured separately. Latency is end-to-end time for one scenario. Cost is estimated from the checked-in pricing rates and reported token usage; it is not an invoice total. Missing token data is shown as unavailable. One pass is directional evidence; repeat runs are needed because model outputs and provider latency vary.</p><p id="provenance"></p><p>Pricing sources: <a id="openai-pricing" target="_blank" rel="noreferrer">OpenAI</a> and <a id="meta-pricing" target="_blank" rel="noreferrer">Meta</a>.</p></details>
+    </section>
+
+    <section class="history-section">
+      <div class="section-head"><div><p class="eyebrow">SAVED LOCALLY</p><h2>Previous runs</h2></div></div>
+      <div id="history" class="history"></div>
+    </section>
+    <footer>Decision reminder: compare quality first, then cost and latency at comparable quality. A cheaper run that breaks policy behavior is not a successful migration.</footer>
+  </main>
+  <script type="module" src="/eval-dashboard.js"></script>
+</body>
+</html>

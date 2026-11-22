@@ -1,0 +1,53 @@
+# Lesson 10: Compare model providers before migrating
+
+## The learning goal
+
+Move the same support agent between OpenAI and Meta Model API, then use one maintained scenario suite to see what changed. The agent instructions, tools, fixtures, and grader stay the same. Only the model provider and model ID change.
+
+This project uses the Agents SDK's OpenAI-compatible provider with Meta's Responses endpoint (`https://api.meta.ai/v1`). Meta documents tool calling and the OpenAI-compatible Responses API. That lets us compare the providers without rewriting the agent's tool definitions. It does **not** mean their model behavior or every API feature is identical.
+
+## Step 1: configure credentials
+
+Copy `.env.example` values into your shell or the local server environment. Keep both provider keys server-side:
+
+```sh
+export OPENAI_API_KEY="..."
+export META_MODEL_API_KEY="..."
+pnpm run dev
+```
+
+The app's normal chat uses `MODEL_PROVIDER` (`openai` by default, `meta` to switch). For example, `MODEL_PROVIDER=meta` selects `muse-spark-1.3`. The local comparison dashboard always runs both providers and does not change the app's default.
+
+## Step 2: make a paired baseline
+
+Open <http://localhost:4173/evals> and click **Run both models**. This is an explicit action because every scenario makes live API calls and can incur charges. Each provider receives the same scenario prompt and fixture state; their execution order alternates across scenarios to reduce timing-order bias.
+
+The current comparison includes 11 single-turn model scenarios and the existing multi-turn conversation scenario. The output is one local JSON report under `eval-results/`; that directory is gitignored because reports can contain generated responses and are run artifacts. API keys are not recorded.
+
+## Step 3: read each metric
+
+| Metric | What it measures | Decision use |
+| --- | --- | --- |
+| Rubric pass rate | Scenarios passing existing tool, policy, and response checks | Start here; safety-critical failures can veto a migration |
+| Failed checks | Specific violated expectations | Inspect the scenario and trace before explaining a score change |
+| Model requests | Model API requests in an agent run | Extra agent calls can increase latency and token cost |
+| Tool calls | Calls to this app's order/refund functions | Separate from provider requests; tools here use local fixtures |
+| Input/output tokens | SDK/provider-reported usage across the run | Helps explain cost and prompt/tool-loop growth |
+| Estimated cost | Token counts × configured rates | Compare economics; this is an estimate, not invoice data |
+| Median/P95 latency | End-to-end time per scenario | Compare user-visible speed; this sample is small |
+
+These metrics stay separate because one customer message may trigger multiple model requests and tool calls. Missing usage is **unavailable**, not zero. The report keeps per-scenario results so aggregate scores cannot hide a regression.
+
+## Step 4: decide whether to migrate
+
+Use the current OpenAI run as a baseline and compare Meta on the same suite. First inspect security or policy failures, then compare quality scenario by scenario. If important scenarios fail, update the agent or eval expectation only when the desired behavior changes; rerun the suite to check regressions. After quality is acceptable, compare estimated cost and latency.
+
+One paired pass is a teaching/demo baseline, not enough evidence for a production decision. Model outputs vary. Repeat the paired run several times, on the same scenario versions and under comparable conditions. Compare per-scenario consistency as well as averages, and reserve new held-out scenarios for an independent check. This dashboard starts with one pass so runtime and cost stay clear; a repeat-count control can be the next incremental step.
+
+## Where it runs
+
+The run button and dashboard endpoint are in `scripts/dev.js`, bound to `127.0.0.1`. `.vercelignore` excludes the dashboard assets and comparison runner, so Vercel cannot serve the paid-run interface. GitHub Actions continues to run offline unit/API tests and deterministic policy scenarios; live comparisons remain manual because they need provider secrets, use credits, and can vary.
+
+## Cost assumptions
+
+Rates live in [`evals/pricing.json`](../evals/pricing.json) with official links and an effective date. Update that file when model IDs, modes, billing rates, or dates change. The estimate uses input/output token rates and reported cached-input details; it does not represent an invoice. The selected Meta model is the Standard model ID; Meta's Contributor variant has different pricing and data-use terms and is not silently substituted.

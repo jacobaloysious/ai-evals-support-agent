@@ -26,6 +26,6 @@ Each model turn receives a unique trace ID, but both use the same conversation I
 
 ## Checks
 
-`evals/conversation-grading.js` checks every turn's tool result and queue state, the final wording, one shared conversation ID, and a distinct trace ID per turn. Unit tests use synthetic good and bad conversation results, so they need no API key. `npm run eval:conversation` runs the model-backed version and requires `OPENAI_API_KEY`.
+`evals/conversation-grading.js` checks every turn's tool result and queue state, the final wording, one shared conversation ID, and a distinct trace ID per turn. Unit tests use synthetic good and bad conversation results, so they need no API key. `npm run eval:conversation` requires credentials for the selected provider (`OPENAI_API_KEY` by default, or Meta credentials when `MODEL_PROVIDER=meta`).
 
 This eval proves that the model received the prior messages and that the server applied the policy against the current test clock. It does not simulate a real deployment or a human refund reviewer making a decision.

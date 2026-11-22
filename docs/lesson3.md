@@ -36,8 +36,8 @@ The outcome and request count are deterministic safety checks. A reviewer reques
 npm run eval:model
 ```
 
-This calls the configured OpenAI model for each customer message. It checks that the model actually used the expected tool, that the server returned the expected policy code, that the refund queue has the right state, and that the final response passes a small set of phrase checks. The exact policy and side-effect checks remain authoritative; phrase checks are a lightweight first pass for response quality.
+This calls the configured model provider for each customer message. It checks that the model actually used the expected tool, that the server returned the expected policy code, that the refund queue has the right state, and that the final response passes a small set of phrase checks. The exact policy and side-effect checks remain authoritative; phrase checks are a lightweight first pass for response quality.
 
-The runner prints a distinct trace ID and conversation ID per scenario. The Agents SDK can export each run to the OpenAI Traces dashboard; `forceFlush()` is called so the process waits for queued trace data before it exits. This runner does not use Vercel. It requires a local `OPENAI_API_KEY`, and each scenario makes a live model request. If the key is missing, it exits with a clear message rather than reporting a skipped scenario as passed.
+The runner prints a distinct trace ID and conversation ID per scenario. The Agents SDK can export each run to the OpenAI Traces dashboard; `forceFlush()` is called so the process waits for queued trace data before it exits. This runner does not use Vercel. It requires credentials for the configured provider, and makes live model calls. If credentials are missing, it exits with a clear message rather than reporting a skipped scenario as passed.
 
 An eval can still be flaky because the model may choose different wording or tool behavior across runs. This first model eval therefore uses broad phrase alternatives and exact checks for tool code and queue state. Review a failed scenario's trace before changing the policy or prompt.
