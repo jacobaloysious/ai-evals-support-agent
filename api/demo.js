@@ -64,6 +64,24 @@ function json(data, status = 200, cookie) {
   return new Response(JSON.stringify(data), { status, headers });
 }
 
+function safeErrorMetadata(error) {
+  const safeIdentifier = (value) => typeof value === "string"
+    && /^[A-Za-z0-9_.:-]{1,100}$/.test(value)
+    ? value
+    : undefined;
+  const metadata = {
+    errorName: safeIdentifier(error?.name) ?? "UnknownError",
+  };
+  if (Number.isInteger(error?.status)) metadata.errorStatus = error.status;
+  const errorCode = safeIdentifier(error?.code);
+  const providerRequestId = safeIdentifier(error?.request_id ?? error?.requestId);
+  if (errorCode) metadata.errorCode = errorCode;
+  if (providerRequestId) metadata.providerRequestId = providerRequestId;
+  return metadata;
+}
+
+export { safeErrorMetadata };
+
 function cookieHeader(request, value, maxAge = 86400) {
   const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
   return `${COOKIE}=${value}; HttpOnly; Path=/; SameSite=Strict; Max-Age=${maxAge}${secure}`;
@@ -239,8 +257,15 @@ export default {
       const traceId = `trace_${randomUUID().replaceAll("-", "")}`;
       const { conversationId } = body;
       console.info(JSON.stringify({ event: "agent_run_started", conversationId, traceId }));
+      let reply;
+      let runFailed = false;
+      let runError;
       try {
-        const reply = await world.chatAgent.reply(body.messages, { traceId, conversationId });
+        reply = await world.chatAgent.reply(body.messages, { traceId, conversationId });
+      } catch (error) {
+        runFailed = true;
+        runError = error;
+      } finally {
         try {
           await getGlobalTraceProvider().forceFlush();
         } catch (error) {
@@ -248,20 +273,21 @@ export default {
             event: "agent_trace_flush_failed",
             conversationId,
             traceId,
-            errorName: error instanceof Error ? error.name : "UnknownError",
+            ...safeErrorMetadata(error),
           }));
         }
-        console.info(JSON.stringify({ event: "agent_run_completed", conversationId, traceId, turns: reply.turns }));
-        result = { outcome: "answered", message: reply.message, turns: reply.turns, traceId, conversationId };
-      } catch (error) {
+      }
+      if (runFailed) {
         console.error(JSON.stringify({
           event: "agent_run_failed",
           conversationId,
           traceId,
-          errorName: error instanceof Error ? error.name : "UnknownError",
+          ...safeErrorMetadata(runError),
         }));
         return json({ error: "Chat couldn't complete. Please try again.", traceId }, 502);
       }
+      console.info(JSON.stringify({ event: "agent_run_completed", conversationId, traceId, turns: reply.turns }));
+      result = { outcome: "answered", message: reply.message, turns: reply.turns, traceId, conversationId };
     } else if (body.action === "propose") {
       if (state.requests.length >= 5 && body.proposal?.action === "request_shipping_refund") {
         return json({ error: "Demo review queue is full. Reset the demo to continue." }, 429);
