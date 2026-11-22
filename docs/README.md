@@ -27,7 +27,7 @@ Run from the repository root:
 
 ```sh
 pnpm test
-pnpm run eval:lesson3
+pnpm run eval:policy
 pnpm run eval:model
 pnpm run eval:conversation
 ```

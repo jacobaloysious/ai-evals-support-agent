@@ -2,7 +2,7 @@
 
 ## What this eval checks
 
-The JSON file in `evals/lesson3-scenarios.json` describes customer situations using a fixed session, order, and clock. `evals/lesson3.js` creates fresh in-memory stores for every scenario, runs the deterministic agent interface, then compares the result and refund-request side effect with the expected behavior.
+The JSON file in `evals/lesson3-scenarios.json` describes customer situations using a fixed session, order, and clock. `evals/deterministic-policy-eval.js` creates fresh in-memory stores for every scenario, runs the deterministic agent interface, then compares the result and refund-request side effect with the expected behavior.
 
 This first eval checks three policy situations:
 
@@ -19,7 +19,7 @@ This does **not** yet evaluate whether the model understands arbitrary customer 
 ## How to run it
 
 ```sh
-npm run eval:lesson3
+npm run eval:policy
 ```
 
 Each printed scenario is a small eval trace: it shows the proposal, agent outcome, created refund requests, and response. It is not the OpenAI Agents SDK trace; the runner does not call the model or create a remote trace.

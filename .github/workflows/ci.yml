@@ -34,4 +34,4 @@ jobs:
         run: pnpm test
 
       - name: Run deterministic behavior eval
-        run: pnpm eval:lesson3
+        run: pnpm eval:policy

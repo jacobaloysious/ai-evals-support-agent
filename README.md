@@ -18,10 +18,10 @@ The project follows the [AI Evals for Engineers & PMs syllabus](https://docs.goo
 npm install --global pnpm@9
 pnpm install --frozen-lockfile
 pnpm test
-pnpm run eval:lesson3
+pnpm run eval:policy
 ```
 
-`pnpm test` runs the unit and API tests. `eval:lesson3` runs deterministic policy scenarios without contacting OpenAI.
+`pnpm test` runs the unit and API tests. `eval:policy` runs deterministic policy scenarios without contacting OpenAI.
 
 ### Run the demo
 
@@ -61,13 +61,13 @@ Read the lessons in order. Each page explains the question, implementation, comm
 | Command | What it does | Uses the OpenAI API? |
 | --- | --- | --- |
 | `pnpm test` | Unit and API tests, including grader checks | No |
-| `pnpm run eval:lesson3` | Deterministic refund-policy scenarios | No |
+| `pnpm run eval:policy` | Deterministic refund-policy scenarios | No |
 | `pnpm run eval:model` | Live one-message scenarios | Yes; a run may use several model turns and tool calls |
 | `pnpm run eval:conversation` | Live multi-turn refund conversation | Yes; multiple model turns |
 | `MODEL_EVAL_SCENARIOS=./optimization-scenarios.json pnpm run eval:model` | Live eval against the Lesson 8–9 optimization cases | Yes |
 | `MODEL_EVAL_SCENARIOS=./final-validation-scenarios.json pnpm run eval:model` | Live eval against separate final policy cases | Yes |
 
-GitHub Actions runs `pnpm test` and `pnpm eval:lesson3`. It deliberately does not call the live model evals: those need a secret API key, incur usage, and can vary between runs.
+GitHub Actions runs `pnpm test` and `pnpm eval:policy`. It deliberately does not call the live model evals: those need a secret API key, incur usage, and can vary between runs.
 
 ## Prototype limits
 

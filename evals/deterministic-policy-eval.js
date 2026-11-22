@@ -58,7 +58,7 @@ function runScenario(scenario) {
 }
 
 let failures = 0;
-console.log(`Lesson 3 deterministic eval: ${scenarios.length} scenarios`);
+console.log(`Deterministic policy eval: ${scenarios.length} scenarios`);
 
 for (const scenario of scenarios) {
   const { result, requests } = runScenario(scenario);

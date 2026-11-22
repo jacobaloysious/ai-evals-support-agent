@@ -33,7 +33,7 @@ The model can propose an operation. It cannot make an unauthorized tool result s
 | --- | --- | --- |
 | Ownership, shipped status, PIN validation, refund eligibility | Server tools in `src/` | No |
 | Unit/API behavior and grader correctness | `test/` via `pnpm test` | No |
-| Deterministic refund policy scenarios | `evals/lesson3.js` | No |
+| Deterministic refund policy scenarios | `evals/deterministic-policy-eval.js` | No |
 | Model tool choice and final wording | `evals/model-eval.js` | Yes |
 | Whole multi-turn refund conversation | `evals/conversation-eval.js` | Yes |
 | Automated pull-request gate | `.github/workflows/ci.yml` | No; live evals are kept out of CI |
