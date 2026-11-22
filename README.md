@@ -50,7 +50,7 @@ Read the lessons in order. Each page explains the question, implementation, comm
 | 1 | Specify the support problem, define trusted boundaries, and build a tool-using agent | [SPEC.md](SPEC.md), [`src/agent.js`](src/agent.js), [`src/conversational_agent.js`](src/conversational_agent.js) |
 | 2 | Trace a run and connect a conversation to its individual model turns | [DEPLOYMENT.md](DEPLOYMENT.md#lesson-2-inspect-an-agent-run), [`api/demo.js`](api/demo.js) |
 | 3 | Compare deterministic policy evals, live model evals, and multi-turn evals | [docs/lesson3.md](docs/lesson3.md), [docs/conversation-evals.md](docs/conversation-evals.md) |
-| 4–5 | Classify failures and test the grader against good and bad examples | [docs/lesson4-5.md](docs/lesson4-5.md), [`evals/grading.js`](evals/grading.js) |
+| 4–5 | Classify failures and test the grader against good and bad examples | [docs/lesson4-5.md](docs/lesson4-5.md), [`evals/model-grading.js`](evals/model-grading.js) |
 | 6 | Run tests and a deterministic eval automatically in GitHub Actions | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | 7 | Try prompt injection and pressure tactics against the agent | [docs/lesson7-red-team.md](docs/lesson7-red-team.md) |
 | 8 | Establish a baseline and learn why an eval set can stop being held out | [docs/lesson8-baseline.md](docs/lesson8-baseline.md) |
@@ -64,8 +64,8 @@ Read the lessons in order. Each page explains the question, implementation, comm
 | `pnpm run eval:policy` | Deterministic refund-policy scenarios | No |
 | `pnpm run eval:model` | Live one-message scenarios | Yes; a run may use several model turns and tool calls |
 | `pnpm run eval:conversation` | Live multi-turn refund conversation | Yes; multiple model turns |
-| `MODEL_EVAL_SCENARIOS=./optimization-scenarios.json pnpm run eval:model` | Live eval against the Lesson 8–9 optimization cases | Yes |
-| `MODEL_EVAL_SCENARIOS=./final-validation-scenarios.json pnpm run eval:model` | Live eval against separate final policy cases | Yes |
+| `MODEL_EVAL_SCENARIOS=./model-optimization-scenarios.json pnpm run eval:model` | Live eval against the Lesson 8–9 optimization cases | Yes |
+| `MODEL_EVAL_SCENARIOS=./model-final-validation-scenarios.json pnpm run eval:model` | Live eval against separate final policy cases | Yes |
 
 GitHub Actions runs `pnpm test` and `pnpm eval:policy`. It deliberately does not call the live model evals: those need a secret API key, incur usage, and can vary between runs.
 

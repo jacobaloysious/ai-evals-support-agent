@@ -29,7 +29,7 @@ Each row is only three live requests. Latency varies, so these measurements sugg
 
 ## Separate final validation
 
-Because we used the optimization set to guide changes, we did not call it a pristine holdout. We added `evals/final-validation-scenarios.json` with three different policy cases: a state/PIN mismatch, a shipped order, and an untrusted customer claim that a package was lost. After correcting the rubric to accept equivalent wording such as “isn't eligible” and “promised delivery window,” the final validation passed **3/3**. The agent and tool descriptions were unchanged during this final validation run.
+Because we used the optimization set to guide changes, we did not call it a pristine holdout. We added `evals/model-final-validation-scenarios.json` with three different policy cases: a state/PIN mismatch, a shipped order, and an untrusted customer claim that a package was lost. After correcting the rubric to accept equivalent wording such as “isn't eligible” and “promised delivery window,” the final validation passed **3/3**. The agent and tool descriptions were unchanged during this final validation run.
 
 The first validation attempt reported 2/3 because the grader rejected the correct phrase “isn't eligible” and “within its promised delivery window.” That was a false failure, confirmed with a grading unit test. It is useful evidence that evals test the evaluator as well as the agent.
 
@@ -44,5 +44,5 @@ The first validation attempt reported 2/3 because the grader rejected the correc
 Run the repeatable optimization comparison with:
 
 ```sh
-MODEL_EVAL_SCENARIOS=./optimization-scenarios.json npm run eval:model
+MODEL_EVAL_SCENARIOS=./model-optimization-scenarios.json npm run eval:model
 ```

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { gradeModelScenario } from "../evals/grading.js";
+import { gradeModelScenario } from "../evals/model-grading.js";
 
 const earlyRefundScenario = {
   expected: {

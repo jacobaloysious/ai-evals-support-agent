@@ -4,7 +4,7 @@ import { getGlobalTraceProvider } from "@openai/agents";
 import { createConversationalAgent } from "../src/conversational_agent.js";
 import { createOrderTools, OrderStore } from "../src/orders.js";
 import { createAgentRefundTools, RefundRequestStore } from "../src/refund_requests.js";
-import { gradeModelScenario } from "./grading.js";
+import { gradeModelScenario } from "./model-grading.js";
 
 if (!process.env.OPENAI_API_KEY) {
   console.error("Model eval not run: set OPENAI_API_KEY in your local environment first.");

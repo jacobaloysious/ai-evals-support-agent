@@ -19,7 +19,7 @@ We also had an initial connection error when the eval process could not reach Op
 
 ## Lesson 5: test the evaluator itself
 
-The grader is now a pure function in `evals/grading.js`. It takes a scenario plus observed tool results, refund requests, and response text, and returns pass/fail checks. `test/grading.test.js` tests it without an API key.
+The grader is now a pure function in `evals/model-grading.js`. It takes a scenario plus observed tool results, refund requests, and response text, and returns pass/fail checks. `test/grading.test.js` tests it without an API key.
 
 The tests include known-good examples (alternate but correct phrasing and either server-side access denial path) and known-bad examples (an unexpected refund request and a false claim that money was issued). They also check that a missing tool choice and a wrong policy result receive different grader labels.
 
