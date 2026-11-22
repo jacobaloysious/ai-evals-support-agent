@@ -69,7 +69,10 @@ function render(report) {
 }
 
 function renderHistory() {
-  $("#history").innerHTML = reports.length ? reports.map((report, index) => `<button class="history-item" data-index="${index}"><span><strong>${new Date(report.createdAt).toLocaleString()}</strong><small>${report.scenarioCount} scenarios · ${escapeHTML(report.summaries.map((s) => `${s.provider} ${percent(s.qualityPassRate)}`).join(" vs "))}</small></span><span>View →</span></button>`).join("") : `<p class="muted">No saved runs yet. Set both provider keys, then run the comparison.</p>`;
+  const emptyMessage = isLocal
+    ? "No saved runs yet. Set both provider keys, then run the comparison."
+    : "No comparison reports have been published yet.";
+  $("#history").innerHTML = reports.length ? reports.map((report, index) => `<button class="history-item" data-index="${index}"><span><strong>${new Date(report.createdAt).toLocaleString()}</strong><small>${report.scenarioCount} scenarios · ${escapeHTML(report.summaries.map((s) => `${s.provider} ${percent(s.qualityPassRate)}`).join(" vs "))}</small></span><span>View →</span></button>`).join("") : `<p class="muted">${emptyMessage}</p>`;
   document.querySelectorAll(".history-item").forEach((button) => button.addEventListener("click", () => render(reports[Number(button.dataset.index)])));
 }
 
