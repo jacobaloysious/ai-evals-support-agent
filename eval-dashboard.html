@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Model migration comparison</title>
   <link rel="stylesheet" href="/eval-dashboard.css">
+  <style>#production-run-link{text-decoration:none;display:inline-block}</style>
   <style>.case-details{margin-top:5px;font-size:12px;font-weight:400}.case-details summary{color:#4b6558;cursor:pointer}.case-details ul{padding-left:17px}.case-details p{max-width:320px;line-height:1.45;overflow-wrap:anywhere}.case-details strong{font-weight:700}</style>
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
       <a class="back" href="/">← Back to support agent</a>
-      <span class="local-badge">LOCAL EVAL DASHBOARD</span>
+      <span class="local-badge" id="environment-badge">MODEL EVAL DASHBOARD</span>
     </header>
     <section class="intro">
       <p class="eyebrow">MODEL MIGRATION WORKBENCH</p>
@@ -19,9 +20,10 @@
       <p class="lede">Run the same support scenarios against OpenAI and Meta, then compare policy quality, usage, estimated cost, and response time.</p>
       <div class="run-row">
         <button id="run-comparison" class="primary">Run both models</button>
+        <a id="production-run-link" class="primary" href="https://github.com/jacobaloysious/ai-evals-support-agent/actions/workflows/model-comparison.yml" hidden>Run comparison in GitHub Actions</a>
         <span id="status" role="status">Loading saved comparisons…</span>
       </div>
-      <p class="cost-note">One run sends each scenario through each provider once. A multi-step agent run can make multiple model requests. This uses API credits. Reports stay on this computer; keys are never written to the report.</p>
+      <p class="cost-note" id="run-note">One run sends each scenario through each provider once. A multi-step agent run can make multiple model requests. This uses API credits. Reports stay on this computer; keys are never written to the report.</p>
     </section>
 
     <section id="comparison" hidden>
@@ -44,7 +46,7 @@
     </section>
 
     <section class="history-section">
-      <div class="section-head"><div><p class="eyebrow">SAVED LOCALLY</p><h2>Previous runs</h2></div></div>
+      <div class="section-head"><div><p class="eyebrow" id="history-eyebrow">SAVED LOCALLY</p><h2>Previous runs</h2></div></div>
       <div id="history" class="history"></div>
     </section>
     <footer>Decision reminder: compare quality first, then cost and latency at comparable quality. A cheaper run that breaks policy behavior is not a successful migration.</footer>

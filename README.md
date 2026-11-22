@@ -40,7 +40,7 @@ To use Meta Model API instead, set `MODEL_PROVIDER=meta`, `META_MODEL_API_KEY` (
 
 ### Compare models and inspect the migration dashboard
 
-Set both provider keys on the server, start the local app, and open <http://localhost:4173/evals>. The dashboard button runs the same 11 single-turn scenarios plus the existing multi-turn conversation scenario against OpenAI and Meta, then saves a report under the ignored `eval-results/` directory. The run is manual because it consumes API credits; CI still runs only tests and deterministic policy scenarios.
+For a local paired run, set both provider keys, start the app, and open <http://localhost:4173/evals>. The local button runs the same 11 single-turn scenarios plus the existing multi-turn conversation scenario against OpenAI and Meta, then saves a report under the ignored `eval-results/` directory.
 
 ```sh
 export OPENAI_API_KEY="your-openai-key"
@@ -48,7 +48,9 @@ export META_MODEL_API_KEY="your-meta-model-api-key"
 pnpm run dev
 ```
 
-The report records rubric pass rate and failures, model request count, tool calls, provider-reported input/output/total tokens, end-to-end latency, and estimated token cost. “Model requests” are LLM requests; tool calls are shown separately because they do not call the model. Cost is calculated using [evals/pricing.json](evals/pricing.json), with official source links and an effective date. It is an estimate, not invoice data. Missing usage is shown as unavailable. A single pass is directional only; run multiple comparisons under similar conditions before deciding. The dashboard and run endpoint exist only in `scripts/dev.js` and are intentionally absent from the public Vercel API.
+The report records rubric pass rate and failures, model request count, tool calls, provider-reported input/output/total tokens, end-to-end latency, and estimated token cost. “Model requests” are LLM requests; tool calls are shown separately because they do not call the model. Cost is calculated using [evals/pricing.json](evals/pricing.json), with official source links and an effective date. It is an estimate, not invoice data. Missing usage is shown as unavailable. A single pass is directional only; run multiple comparisons under similar conditions before deciding.
+
+In production, `/evals` is a public, read-only dashboard of published mock-data reports. Start a live comparison from the repository's GitHub Actions **Model comparison** workflow. It requires write access, runs only on `main`, reads `OPENAI_API_KEY` and `META_MODEL_API_KEY` from repository secrets, and publishes the key-checked report to `eval-reports/`. Vercel redeploys that public report with the dashboard. The production page has no live model-call endpoint; only the local dashboard can start runs directly.
 
 For deployment setup and the limits of the demo, read [DEPLOYMENT.md](DEPLOYMENT.md). For the system flow and where each eval runs, see [docs/architecture.md](docs/architecture.md).
 For contribution guidance, see [CONTRIBUTING.md](CONTRIBUTING.md). For public-release items, see the [public-readiness checklist](docs/public-release-checklist.md).
@@ -78,7 +80,7 @@ Read the lessons in order. Each page explains the question, implementation, comm
 | `pnpm run eval:model` | Live one-message scenarios | Yes; a run may use several model turns and tool calls |
 | `pnpm run eval:conversation` | Live multi-turn refund conversation | Yes; multiple model turns |
 | `pnpm run eval:compare` | Paired OpenAI/Meta comparison; saves a local dashboard report | Yes; both provider keys required |
-GitHub Actions runs `pnpm test` and `pnpm eval:policy`. It deliberately does not call live model evals: those need provider API keys, incur usage, and can vary between runs.
+GitHub Actions runs `pnpm test` and `pnpm eval:policy` on pushes and pull requests. The separate **Model comparison** workflow is manual because it calls both providers, uses credits, and can vary between runs.
 
 ## Prototype limits
 

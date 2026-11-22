@@ -40,7 +40,8 @@ test("demo session is signed, scoped to one fictional customer, and cannot read 
   assert.deepEqual(foreign.data.state.orders.map(({ id }) => id), ["NS-1001", "NS-1002"]);
 
   const [payload, mac] = alice.cookie.split("=")[1].split(".");
-  const tampered = `northstar_demo=${payload}.${mac.slice(0, -1)}A`;
+  const replacement = mac[0] === "A" ? "B" : "A";
+  const tampered = `northstar_demo=${payload}.${replacement}${mac.slice(1)}`;
   const rejected = await call(undefined, tampered);
   assert.deepEqual(rejected.data, { signedIn: false });
 });

@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/evals", "destination": "/eval-dashboard.html" }
+  ]
+}

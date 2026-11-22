@@ -1,0 +1,71 @@
+name: Model comparison
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: model-comparison-main
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    name: Compare OpenAI and Meta
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify provider secrets are configured
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          META_MODEL_API_KEY: ${{ secrets.META_MODEL_API_KEY }}
+        run: |
+          test -n "$OPENAI_API_KEY" || { echo "Missing repository secret: OPENAI_API_KEY"; exit 1; }
+          test -n "$META_MODEL_API_KEY" || { echo "Missing repository secret: META_MODEL_API_KEY"; exit 1; }
+
+      - name: Run offline checks before using API credits
+        run: |
+          pnpm test
+          pnpm eval:policy
+
+      - name: Run the paired live comparison
+        run: pnpm eval:compare
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          META_MODEL_API_KEY: ${{ secrets.META_MODEL_API_KEY }}
+
+      - name: Publish the key-checked report
+        run: node scripts/publish-eval-report.js
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          META_MODEL_API_KEY: ${{ secrets.META_MODEL_API_KEY }}
+
+      - name: Commit the public report for Vercel
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add eval-reports
+          git commit -m "Publish model comparison report"
+          git push origin main

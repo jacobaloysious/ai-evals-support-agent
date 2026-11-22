@@ -1,5 +1,4 @@
-# The comparison dashboard and run harness are local-only; they can initiate paid API calls.
-eval-dashboard.html
-eval-dashboard.js
-eval-dashboard.css
+# The comparison runner remains local/GitHub Actions only; the deployed dashboard is read-only.
 evals/compare-models.js
+scripts/publish-eval-report.js
+.github/

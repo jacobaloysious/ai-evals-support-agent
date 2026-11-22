@@ -20,7 +20,7 @@ The app's normal chat uses `MODEL_PROVIDER` (`openai` by default, `meta` to swit
 
 ## Step 2: make a paired baseline
 
-Open <http://localhost:4173/evals> and click **Run both models**. This is an explicit action because every scenario makes live API calls and can incur charges. Each provider receives the same scenario prompt and fixture state; their execution order alternates across scenarios to reduce timing-order bias.
+For a local run, open <http://localhost:4173/evals> and click **Run both models**. In production, start the **Model comparison** workflow from GitHub Actions. This is manual because every scenario makes live API calls and can incur charges. Each provider receives the same scenario prompt and fixture state; their execution order alternates across scenarios to reduce timing-order bias.
 
 The current comparison includes 11 single-turn model scenarios and the existing multi-turn conversation scenario. The output is one local JSON report under `eval-results/`; that directory is gitignored because reports can contain generated responses and are run artifacts. API keys are not recorded.
 
@@ -46,7 +46,9 @@ One paired pass is a teaching/demo baseline, not enough evidence for a productio
 
 ## Where it runs
 
-The run button and dashboard endpoint are in `scripts/dev.js`, bound to `127.0.0.1`. `.vercelignore` excludes the dashboard assets and comparison runner, so Vercel cannot serve the paid-run interface. GitHub Actions continues to run offline unit/API tests and deterministic policy scenarios; live comparisons remain manual because they need provider secrets, use credits, and can vary.
+The comparison runner runs locally or through the manually triggered GitHub Actions workflow. In production, Vercel serves a read-only dashboard and published reports. The production dashboard links to GitHub Actions to start a run; it never calls a paid model endpoint itself. Only repository writers can manually trigger the workflow. Provider keys are stored as GitHub Actions secrets, and the workflow publishes reports to `eval-reports/` so Vercel can serve them as static files. GitHub's `GITHUB_TOKEN` has only the repository-content permission needed to publish those reports. The workflow checks for both keys before it runs any paid scenarios.
+
+Offline unit/API tests and deterministic policy scenarios continue to run on each push and pull request. Live comparisons remain manual because they use provider credits and model behavior varies.
 
 ## Cost assumptions
 

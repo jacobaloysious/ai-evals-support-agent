@@ -1,7 +1,17 @@
 const $ = (selector) => document.querySelector(selector);
 const runButton = $("#run-comparison");
+const productionRunLink = $("#production-run-link");
 const statusNode = $("#status");
+const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 let reports = [];
+
+if (!isLocal) {
+  runButton.hidden = true;
+  productionRunLink.hidden = false;
+  $("#environment-badge").textContent = "PUBLIC · READ ONLY";
+  $("#run-note").textContent = "Anyone can view these reports. Starting a comparison requires write access to the GitHub repository. Live runs use API credits; keys stay in GitHub Actions secrets.";
+  $("#history-eyebrow").textContent = "PUBLISHED REPORTS";
+}
 
 function escapeHTML(value = "") {
   return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -64,6 +74,22 @@ function renderHistory() {
 }
 
 async function load() {
+  if (!isLocal) {
+    const indexResponse = await fetch("/eval-reports/index.json", { cache: "no-store" });
+    if (!indexResponse.ok) throw new Error("Could not load published comparison index");
+    const index = await indexResponse.json();
+    const files = Array.isArray(index.reports) ? index.reports : [];
+    const loaded = await Promise.all(files.map(async (file) => {
+      if (!/^[\w.-]+\.json$/.test(file)) return null;
+      const response = await fetch(`/eval-reports/${encodeURIComponent(file)}`, { cache: "no-store" });
+      return response.ok ? response.json() : null;
+    }));
+    reports = loaded.filter(Boolean).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    renderHistory();
+    if (reports.length) render(reports[0]);
+    statusNode.textContent = reports.length ? `${reports.length} published comparison${reports.length === 1 ? "" : "s"}` : "No comparisons have been published yet";
+    return;
+  }
   const response = await fetch("/api/evals/runs");
   if (!response.ok) throw new Error("Could not load saved runs");
   reports = await response.json();
