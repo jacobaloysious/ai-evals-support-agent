@@ -43,8 +43,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           META_MODEL_API_KEY: ${{ secrets.META_MODEL_API_KEY }}
         run: |
-          test -n "$OPENAI_API_KEY" || { echo "Missing repository secret: OPENAI_API_KEY"; exit 1; }
-          test -n "$META_MODEL_API_KEY" || { echo "Missing repository secret: META_MODEL_API_KEY"; exit 1; }
+          test -n "$OPENAI_API_KEY" || { echo "Missing Production environment secret: OPENAI_API_KEY"; exit 1; }
+          test -n "$META_MODEL_API_KEY" || { echo "Missing Production environment secret: META_MODEL_API_KEY"; exit 1; }
 
       - name: Run offline checks before using API credits
         run: |
